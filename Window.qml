@@ -5,15 +5,15 @@ import QtQuick.Layouts
 
 
 ApplicationWindow {
-    width: 640;height: 480;visible: true
+    width: 1000;height: 700;visible: true
 
     header: ToolBar{
         RowLayout{
             ToolButton{action:actions.open}
-            ToolSeparator{}
+            ToolSeparator{Layout.fillHeight: true}
             ToolButton{action:actions.view}
             ToolButton{action:actions.see}
-            ToolSeparator{}
+            ToolSeparator{Layout.fillHeight: true}
             ToolButton{action:actions.previous}
             ToolButton{action:actions.next}
             ToolButton{action:actions.tool}
@@ -61,3 +61,4 @@ ApplicationWindow {
         id:content
     }
 }
+

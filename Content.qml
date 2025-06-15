@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     property alias dialogs:_dialogs
@@ -9,14 +11,89 @@ Item {
 
     id:_content
     anchors.fill:parent
-    GridView{
-        id:gridView
+
+    //新增SplitView布局，以显示目录树与工具栏
+
+    SplitView{
         anchors.fill:parent
+        orientation: Qt.Horizontal
 
-        model:musicFiles
+        //左侧面板(目录树/工具)
+        Page{
+            id:leftPage
+            // visible: sidebarVisible
+            implicitWidth:200
 
-        delegate: musicDelegate
+            //StackLayout：管理多个项目
+            StackLayout{
+                anchors.fill:parent//防止溢出
+
+                //工具栏
+                ScrollView{
+                    id:toolPanel
+
+                    ColumnLayout{
+                        width:toolPanel.width
+
+                        //图片操作
+                        Label{
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter//水平居中
+                            text:"Image operations"
+                        }
+
+                        ToolButton{
+                            Layout.fillWidth: true//使按钮充满工具栏
+
+                            text:"Rotate to the left"
+                        }
+                        ToolButton{
+                            Layout.fillWidth: true
+
+                            text:"Rotate to the right"
+                        }
+
+                        ToolSeparator{
+                            orientation: Qt.Horizontal
+                            Layout.fillWidth: true//设置分割线的大小
+                        }
+
+                        //文件操作
+                        Label{
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter//水平居中
+                            text:"File operations"
+                        }
+                        ToolButton{
+                            Layout.fillWidth: true
+                            text:"Move to..."
+                        }
+                        ToolButton{
+                            Layout.fillWidth: true
+                            text:"Rename"
+                        }
+                    }
+                }
+
+                //目录树
+
+
+            }
+        }
+
+
+        GridView{
+            id:gridView
+            // anchors.fill:parent
+
+            model:musicFiles
+
+            delegate: musicDelegate
+        }
     }
+
+
+
 
     Component{
         id:musicDelegate
