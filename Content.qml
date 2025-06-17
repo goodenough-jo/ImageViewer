@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import QtQuick.Dialogs
+import Qt.labs.folderlistmodel
 
 Item {
     property alias dialogs:_dialogs
@@ -8,92 +8,58 @@ Item {
     property ListModel musicFiles : ListModel{}//存储图片文件--filePath
     property int currentIndex : -1//索引
     property alias singlePlayer : _singlePlayer
+    property alias gridView:_multiPic
 
     id:_content
     anchors.fill:parent
-
-    //新增SplitView布局，以显示目录树与工具栏
-
-    SplitView{
+    GridView{
+        id:_multiPic
         anchors.fill:parent
-        orientation: Qt.Horizontal
+        model:musicFiles
+        delegate: musicDelegate
 
-        //左侧面板(目录树/工具)
-        Page{
-            id:leftPage
-            // visible: sidebarVisible
-            implicitWidth:200
-
-            //StackLayout：管理多个项目
-            StackLayout{
-                anchors.fill:parent//防止溢出
-
-                //工具栏
-                ScrollView{
-                    id:toolPanel
-
-                    ColumnLayout{
-                        width:toolPanel.width
-
-                        //图片操作
-                        Label{
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter//水平居中
-                            text:"Image operations"
+        Connections{
+            target: fileStream
+            function onFileRemoved(path)
+            {
+                console.log("File removed signal received: " + path)
+                
+                // Remove file from model if it exists
+                for(let i = 0; i < musicFiles.count; i++) {
+                    let modelPath = musicFiles.get(i).filePath.toString().replace("file://", "")
+                    path = path.toString().replace("file://", "")
+                    
+                    console.log("Comparing: model path=" + modelPath + ", removed path=" + path)
+                    
+                    if(modelPath === path) {
+                        console.log("Removing file at index " + i)
+                        musicFiles.remove(i)
+                        
+                        // Update current index if needed
+                        if(currentIndex >= i) {
+                            currentIndex = Math.max(0, currentIndex - 1)
+                            console.log("Updated currentIndex to " + currentIndex)
                         }
-
-                        ToolButton{
-                            Layout.fillWidth: true//使按钮充满工具栏
-
-                            text:"Rotate to the left"
+                        
+                        // Hide player if current file was deleted
+                        if(singlePlayer.source.toString().replace("file://", "") === path) {
+                            singlePlayer.visible = false
+                            console.log("Hiding single player view")
+                            
+                            if(musicFiles.count > 0) {
+                                singlePlayer.source = musicFiles.get(currentIndex).filePath
+                                console.log("Updated player source to: " + musicFiles.get(currentIndex).filePath)
+                            } else {
+                                singlePlayer.source = ""
+                                console.log("Cleared player source")
+                            }
                         }
-                        ToolButton{
-                            Layout.fillWidth: true
-
-                            text:"Rotate to the right"
-                        }
-
-                        ToolSeparator{
-                            orientation: Qt.Horizontal
-                            Layout.fillWidth: true//设置分割线的大小
-                        }
-
-                        //文件操作
-                        Label{
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter//水平居中
-                            text:"File operations"
-                        }
-                        ToolButton{
-                            Layout.fillWidth: true
-                            text:"Move to..."
-                        }
-                        ToolButton{
-                            Layout.fillWidth: true
-                            text:"Rename"
-                        }
+                        break;
                     }
                 }
-
-                //目录树
-
-
             }
         }
-
-
-        GridView{
-            id:gridView
-            // anchors.fill:parent
-
-            model:musicFiles
-
-            delegate: musicDelegate
-        }
     }
-
-
-
 
     Component{
         id:musicDelegate
@@ -153,8 +119,22 @@ Item {
                 console.log(musicFiles.get(i).filePath)
             }
             currentIndex = 0
+            
+            // Set the first image as default
+            if(musicFiles.count > 0) {
+                singlePlayer.source = musicFiles.get(0).filePath
+                console.log("Set default image path: " + musicFiles.get(0).filePath)
+            }
         }
-
+        
+        confirmDialog.onAccepted: {
+            var filePath = confirmDialog.filePath
+            if(fileStream.moveToTrash(filePath)) {
+                messageDialog.show("已经成功移动到回收站")
+            } else {
+                messageDialog.show("删除失败：" + fileStream.lastError(), true)
+            }
+        }
     }
 }
 

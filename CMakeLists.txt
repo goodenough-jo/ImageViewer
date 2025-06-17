@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.16)
 
 project(player VERSION 0.1 LANGUAGES CXX)
 
@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
-qt_standard_project_setup(REQUIRES 6.9)
+qt_standard_project_setup()
 
 qt_add_executable(appplayer)
 
@@ -18,6 +18,9 @@ qt_add_qml_module(appplayer
     QML_FILES Actions.qml
     QML_FILES Content.qml
     QML_FILES Dialogs.qml
+    QML_FILES
+    QML_FILES
+    SOURCES fileStream.h fileStream.cpp
     QML_FILES
 )
 
