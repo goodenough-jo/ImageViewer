@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Dialogs
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -11,15 +12,15 @@ Item {
     property ListModel musicFiles : ListModel{}//存储图片文件--filePath
     property int currentIndex : -1//索引
     property alias singlePlayer : _singlePlayer
+    property alias gridView:_multiPic
 
     id:_content
     anchors.fill:parent
-
-    //新增SplitView布局，以显示目录树与工具栏
-
-    SplitView{
+    GridView{
+        id:_multiPic
         anchors.fill:parent
-        orientation: Qt.Horizontal
+        model:musicFiles
+        delegate: musicDelegate
 
         //左侧面板(目录树/工具)
         Page{
@@ -31,47 +32,22 @@ Item {
             StackLayout{
                 anchors.fill:parent//防止溢出
 
-                // TreeView {
-                //     id: directoryTree
-                //     model: FolderListModel {
-                //         id: folderModel
-                //         rootFolder: "file:///" + Qt.application.arguments[1] || StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]  // 默认显示用户主目录
-                //         showDirsFirst: true
-                //         nameFilters: ["*.jpg", "*.png", "*.bmp"]  // 只显示图片文件
-                //     }
+                //工具栏
+                ScrollView{
+                    id:toolPanel
 
-                //     // 自定义节点样式
-                //     delegate: TreeViewDelegate {
-                //         id: treeDelegate
-                //         implicitHeight: 30
+                    ColumnLayout{
+                        width:toolPanel.width
 
-                //         contentItem: RowLayout {
-                //             spacing: 5
-                //             Image {
-                //                 source: model.isDir ? "qrc:/icons/folder.png" : "qrc:/icons/file.png"
-                //                 Layout.preferredWidth: 16
-                //                 Layout.preferredHeight: 16
-                //             }
-                //             Text {
-                //                 text: model.fileName
-                //                 elide: Text.ElideRight
-                //                 Layout.fillWidth: true
-                //             }
-                //         }
-
-                //         // 点击节点时加载该目录下的图片
-                //         TapHandler {
-                //             onTapped: {
-                //                 if (model.isDir) {
-                //                     folderModel.folder = "file:///" + model.filePath;
-                //                 } else {
-                //                     musicFiles.append({"filePath": model.fileURL});
-                //                 }
-                //             }
-                //         }
-                //     }
-                // }
-
+                        //图片操作
+                        Label{
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter//水平居中
+                            text:"Image operations"
+                        }
+                    }
+                }
+                //目录树
                 TreeView{
                     id:folderTree
                     model:FolderListModel{
@@ -90,134 +66,129 @@ Item {
                 }
 
 
+            }
+        }
 
-                //工具栏
-                ScrollView{
-                    id:toolPanel
-
-                    ColumnLayout{
-                        width:toolPanel.width
-
-                        //图片操作
-                        Label{
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter//水平居中
-                            text:"Image operations"
+        Connections{
+            target: fileStream
+            function onFileRemoved(path)
+            {
+                console.log("File removed signal received: " + path)
+                
+                // Remove file from model if it exists
+                for(let i = 0; i < musicFiles.count; i++) {
+                    let modelPath = musicFiles.get(i).filePath.toString().replace("file://", "")
+                    path = path.toString().replace("file://", "")
+                    
+                    console.log("Comparing: model path=" + modelPath + ", removed path=" + path)
+                    
+                    if(modelPath === path) {
+                        console.log("Removing file at index " + i)
+                        musicFiles.remove(i)
+                        
+                        // Update current index if needed
+                        if(currentIndex >= i) {
+                            currentIndex = Math.max(0, currentIndex - 1)
+                            console.log("Updated currentIndex to " + currentIndex)
+                            // >>>>>>> origin/dev
                         }
-
-                        ToolButton{
-                            Layout.fillWidth: true//使按钮充满工具栏
-
-                            text:"Rotate to the left"
+                        
+                        // Hide player if current file was deleted
+                        if(singlePlayer.source.toString().replace("file://", "") === path) {
+                            singlePlayer.visible = false
+                            console.log("Hiding single player view")
+                            
+                            if(musicFiles.count > 0) {
+                                singlePlayer.source = musicFiles.get(currentIndex).filePath
+                                console.log("Updated player source to: " + musicFiles.get(currentIndex).filePath)
+                            } else {
+                                singlePlayer.source = ""
+                                console.log("Cleared player source")
+                            }
                         }
-                        ToolButton{
-                            Layout.fillWidth: true
-
-                            text:"Rotate to the right"
-                        }
-
-                        ToolSeparator{
-                            orientation: Qt.Horizontal
-                            Layout.fillWidth: true//设置分割线的大小
-                        }
-
-                        //文件操作
-                        Label{
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter//水平居中
-                            text:"File operations"
-                        }
-                        ToolButton{
-                            Layout.fillWidth: true
-                            text:"Move to..."
-                        }
-                        ToolButton{
-                            Layout.fillWidth: true
-                            text:"Rename"
-                        }
+                        break;
                     }
                 }
-
-
-
-
             }
         }
 
 
-        GridView{
-            id:gridView
-            // anchors.fill:parent
 
-            model:musicFiles
 
-            delegate: musicDelegate
+
+
+        Component{
+            id:musicDelegate
+            Image{
+                source: filePath
+                width:gridView.cellWidth-10;height:gridView.cellHeight-10
+                TapHandler{
+                    onDoubleTapped: {
+                        singlePlayer.focus=true//必须添加 不然左右键没有反应
+                        singlePlayer.source=filePath
+                        singlePlayer.visible=true
+                        currentIndex = index
+                        console.log("currentIndex:"+currentIndex)
+                    }
+                }
+            }
         }
-    }
 
-
-
-
-    Component{
-        id:musicDelegate
         Image{
-            source: filePath
-            width:gridView.cellWidth-10;height:gridView.cellHeight-10
+            id:_singlePlayer
+            anchors.fill:parent
+            visible: false
+
             TapHandler{
-                onDoubleTapped: {
-                    singlePlayer.focus=true//必须添加 不然左右键没有反应
-                    singlePlayer.source=filePath
-                    singlePlayer.visible=true
-                    currentIndex = index
+                onTapped: {
+                    singlePlayer.visible=false
+                }
+            }
+            // Keys.onLeftPressed: {
+            //     currentIndex--;
+            //     source:musicFiles.get(currentIndex).filePath
+            // }
+            Keys.onLeftPressed: {
+                if(currentIndex > 0) {
+                    currentIndex--;
                     console.log("currentIndex:"+currentIndex)
+                    source = musicFiles.get(currentIndex).filePath;
+                }
+            }
+            Keys.onRightPressed: {
+                if(currentIndex < musicFiles.count - 1) {
+                    currentIndex++;
+                    console.log("currentIndex:"+currentIndex)
+                    source = musicFiles.get(currentIndex).filePath;
+                }
+            }
+        }
+
+        Dialogs{
+            id:_dialogs
+            openDialog.onAccepted: {
+                for(let i=0;i<openDialog.selectedFiles.length;i++){
+                    musicFiles.append({"filePath":openDialog.selectedFiles[i]})
+                    console.log(musicFiles.get(i).filePath)
+                }
+                currentIndex = 0
+
+                // Set the first image as default
+                if(musicFiles.count > 0) {
+                    singlePlayer.source = musicFiles.get(0).filePath
+                    console.log("Set default image path: " + musicFiles.get(0).filePath)
+                }
+            }
+
+            confirmDialog.onAccepted: {
+                var filePath = confirmDialog.filePath
+                if(fileStream.moveToTrash(filePath)) {
+                    messageDialog.show("已经成功移动到回收站")
+                } else {
+                    messageDialog.show("删除失败：" + fileStream.lastError(), true)
                 }
             }
         }
     }
 
-    Image{
-        id:_singlePlayer
-        anchors.fill:parent
-        visible: false
-
-        // focus: true
-        // Keys.enabled: true
-
-        TapHandler{
-            onTapped: {
-                singlePlayer.visible=false
-            }
-        }
-        // Keys.onLeftPressed: {
-        //     currentIndex--;
-        //     source:musicFiles.get(currentIndex).filePath
-        // }
-        Keys.onLeftPressed: {
-            if(currentIndex > 0) {
-                currentIndex--;
-                console.log("currentIndex:"+currentIndex)
-                source = musicFiles.get(currentIndex).filePath;
-            }
-        }
-        Keys.onRightPressed: {
-            if(currentIndex < musicFiles.count - 1) {
-                currentIndex++;
-                console.log("currentIndex:"+currentIndex)
-                source = musicFiles.get(currentIndex).filePath;
-            }
-        }
-    }
-
-    Dialogs{
-        id:_dialogs
-        openDialog.onAccepted: {
-            for(let i=0;i<openDialog.selectedFiles.length;i++){
-                musicFiles.append({"filePath":openDialog.selectedFiles[i]})
-                console.log(musicFiles.get(i).filePath)
-            }
-            currentIndex = 0
-        }
-
-    }
 }
-
