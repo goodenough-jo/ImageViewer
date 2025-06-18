@@ -1,237 +1,183 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
-import Qt.labs.folderlistmodel  // 添加文件夹模型支持
-
+import QtQuick.Dialogs
+import Qt.labs.folderlistmodel
 
 Item {
-    property alias dialogs:_dialogs
+    property alias dialogs: _dialogs
+    property ListModel musicFiles: ListModel {}
+    property int currentIndex: -1
+    property alias singlePlayer: _singlePlayer
+    property alias gridView: _multiPic
 
-    property ListModel musicFiles : ListModel{}//存储图片文件--filePath
-    property int currentIndex : -1//索引
-    property alias singlePlayer : _singlePlayer
+    id: _content
+    anchors.fill: parent
 
-    id:_content
-    anchors.fill:parent
-
-    //新增SplitView布局，以显示目录树与工具栏
-
-    SplitView{
-        id:split
-        anchors.fill:parent
+    SplitView {
+        id: split
+        anchors.fill: parent
         orientation: Qt.Horizontal
 
-        //左侧面板(目录树/工具)
-        Page{
-            id:leftPage
-            // visible: sidebarVisible
-            implicitWidth:200
+        // 左侧面板(目录树/工具)
+        Page {
+            id: leftPage
+            implicitWidth: 200
 
-            //StackLayout：管理多个项目
-            StackLayout{
-                anchors.fill:parent//防止溢出
+            StackLayout {
+                anchors.fill: parent
 
+                // // 目录树
                 // TreeView {
-                //     id: directoryTree
+                //     id: folderTree
                 //     model: FolderListModel {
-                //         id: folderModel
-                //         rootFolder: "file:///" + Qt.application.arguments[1] || StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]  // 默认显示用户主目录
-                //         showDirsFirst: true
-                //         nameFilters: ["*.jpg", "*.png", "*.bmp"]  // 只显示图片文件
-                //     }
-
-                //     // 自定义节点样式
-                //     delegate: TreeViewDelegate {
-                //         id: treeDelegate
-                //         implicitHeight: 30
-
-                //         contentItem: RowLayout {
-                //             spacing: 5
-                //             Image {
-                //                 source: model.isDir ? "qrc:/icons/folder.png" : "qrc:/icons/file.png"
-                //                 Layout.preferredWidth: 16
-                //                 Layout.preferredHeight: 16
-                //             }
-                //             Text {
-                //                 text: model.fileName
-                //                 elide: Text.ElideRight
-                //                 Layout.fillWidth: true
-                //             }
-                //         }
-
-                //         // 点击节点时加载该目录下的图片
-                //         TapHandler {
-                //             onTapped: {
-                //                 if (model.isDir) {
-                //                     folderModel.folder = "file:///" + model.filePath;
-                //                 } else {
-                //                     musicFiles.append({"filePath": model.fileURL});
-                //                 }
-                //             }
-                //         }
-                //     }
-                // }
-
-                // TreeView{
-                //     id:folderTree
-                //     model:FolderListModel{
-                //         // rootFolder: "/root"
-                //         // showDirsFirst: true
                 //         rootFolder: "file:///"
-                //         nameFilters: ["*.jpg","*.png"]
+                //         nameFilters: ["*.jpg", "*.png"]
                 //         showDirsFirst: true
                 //         showDotAndDotDot: false
                 //         showHidden: false
-
                 //     }
-                //     delegate:TreeViewDelegate{
-
-                //     }
+                //     delegate: TreeViewDelegate {}
                 // }
 
+                // 工具栏
+                ScrollView {
+                    id: toolPanel
+                    ColumnLayout {
+                        width: toolPanel.width
 
-
-                //工具栏
-                ScrollView{
-                    id:toolPanel
-
-                    ColumnLayout{
-                        width:toolPanel.width
-
-                        //图片操作
-                        Label{
+                        Label {
                             Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter//水平居中
-                            text:"Image operations"
+                            Layout.alignment: Qt.AlignCenter
+                            text: "Image operations"
                         }
 
-                        ToolButton{
-                            Layout.fillWidth: true//使按钮充满工具栏
-
-                            text:"Rotate to the left"
-                        }
-                        ToolButton{
+                        ToolButton {
                             Layout.fillWidth: true
-
-                            text:"Rotate to the right"
+                            text: "Rotate to the left"
                         }
 
-                        ToolSeparator{
+                        ToolButton {
+                            Layout.fillWidth: true
+                            text: "Rotate to the right"
+                        }
+
+                        ToolSeparator {
                             orientation: Qt.Horizontal
-                            Layout.fillWidth: true//设置分割线的大小
+                            Layout.fillWidth: true
                         }
 
-                        //文件操作
-                        Label{
+                        Label {
                             Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter//水平居中
-                            text:"File operations"
+                            Layout.alignment: Qt.AlignCenter
+                            text: "File operations"
                         }
-                        ToolButton{
+
+                        ToolButton {
                             Layout.fillWidth: true
-                            text:"Move to..."
+                            text: "Move to..."
                         }
-                        ToolButton{
+
+                        ToolButton {
                             Layout.fillWidth: true
-                            text:"Rename"
+                            text: "Rename"
                         }
                     }
                 }
-
-
-
-
             }
         }
 
-        Item{
-            id:rightContainer
-            GridView{
-                id:gridView
-                anchors.fill:parent
-
-                model:musicFiles
-
+        // 右侧内容区域
+        Item {
+            id: rightContainer
+            GridView {
+                id: _multiPic
+                anchors.fill: parent
+                model: musicFiles
                 delegate: musicDelegate
             }
 
-
-            Image{
-                id:_singlePlayer
-                // anchors {
-                //     left: leftPage.right  // 从左侧面板的右侧开始
-                //     right: parent.right   // 延伸到父项右侧
-                //     top: parent.top       // 顶部对齐
-                //     bottom: parent.bottom // 底部对齐
-                // }
-                anchors.fill:parent
+            Image {
+                id: _singlePlayer
+                anchors.fill: parent
                 visible: false
 
-                // focus: true
-                // Keys.enabled: true
-
-                TapHandler{
-                    onTapped: {
-                        singlePlayer.visible=false
-                    }
+                TapHandler {
+                    onTapped: singlePlayer.visible = false
                 }
-                // Keys.onLeftPressed: {
-                //     currentIndex--;
-                //     source:musicFiles.get(currentIndex).filePath
-                // }
+
                 Keys.onLeftPressed: {
                     if(currentIndex > 0) {
-                        currentIndex--;
-                        console.log("currentIndex:"+currentIndex)
-                        source = musicFiles.get(currentIndex).filePath;
+                        currentIndex--
+                        source = musicFiles.get(currentIndex).filePath
                     }
                 }
+
                 Keys.onRightPressed: {
                     if(currentIndex < musicFiles.count - 1) {
-                        currentIndex++;
-                        console.log("currentIndex:"+currentIndex)
-                        source = musicFiles.get(currentIndex).filePath;
+                        currentIndex++
+                        source = musicFiles.get(currentIndex).filePath
                     }
                 }
             }
         }
-
-
     }
 
-
-
-
-    Component{
-        id:musicDelegate
-        Image{
+    Component {
+        id: musicDelegate
+        Image {
             source: filePath
-            width:gridView.cellWidth-10;height:gridView.cellHeight-10
-            TapHandler{
+            width: gridView.cellWidth - 10
+            height: gridView.cellHeight - 10
+            TapHandler {
                 onDoubleTapped: {
-                    singlePlayer.focus=true//必须添加 不然左右键没有反应
-                    singlePlayer.source=filePath
-                    singlePlayer.visible=true
+                    singlePlayer.focus = true
+                    singlePlayer.source = filePath
+                    singlePlayer.visible = true
                     currentIndex = index
-                    console.log("currentIndex:"+currentIndex)
                 }
             }
         }
     }
 
-
-
-    Dialogs{
-        id:_dialogs
+    Dialogs {
+        id: _dialogs
         openDialog.onAccepted: {
-            for(let i=0;i<openDialog.selectedFiles.length;i++){
-                musicFiles.append({"filePath":openDialog.selectedFiles[i]})
-                console.log(musicFiles.get(i).filePath)
+            musicFiles.clear()
+            for(let i = 0; i < openDialog.selectedFiles.length; i++) {
+                musicFiles.append({"filePath": openDialog.selectedFiles[i]})
             }
             currentIndex = 0
+            if(musicFiles.count > 0) {
+                _singlePlayer.source = musicFiles.get(0).filePath
+            }
         }
 
+        confirmDialog.onAccepted: {
+            var filePath = confirmDialog.filePath
+            if(fileStream.moveToTrash(filePath)) {
+                messageDialog.show("已经成功移动到回收站")
+            } else {
+                messageDialog.show("删除失败：" + fileStream.lastError(), true)
+            }
+        }
+    }
+
+    Connections {
+        target: fileStream
+        function onFileRemoved(path) {
+            for(let i = 0; i < musicFiles.count; i++) {
+                let modelPath = musicFiles.get(i).filePath.toString().replace("file://", "")
+                if(modelPath === path.toString().replace("file://", "")) {
+                    musicFiles.remove(i)
+                    if(currentIndex >= i) currentIndex = Math.max(0, currentIndex - 1)
+                    if(_singlePlayer.source.toString().replace("file://", "") === path) {
+                        _singlePlayer.visible = false
+                        _singlePlayer.source = musicFiles.count > 0 ? musicFiles.get(currentIndex).filePath : ""
+                    }
+                    break
+                }
+            }
+        }
     }
 }
-
