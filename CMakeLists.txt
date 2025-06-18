@@ -19,9 +19,13 @@ qt_add_qml_module(appplayer
     QML_FILES Content.qml
     QML_FILES Dialogs.qml
     QML_FILES
+# <<<<<<< HEAD
+    RESOURCES icon.qrc
+# =======
     QML_FILES
     SOURCES fileStream.h fileStream.cpp
     QML_FILES
+# >>>>>>> origin/dev
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)
