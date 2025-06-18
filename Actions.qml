@@ -8,7 +8,6 @@ Item {
     property alias next:_next
     property alias previous :_previous
     property alias tool:_tool
-    property alias del:_delete
 
     Action{
         id:_open
@@ -42,11 +41,7 @@ Item {
         text:"tool"
         icon.name:"document-properties"
     }
-    Action{
-        id:_delete
-        text:"remove"
-        icon.name:"edit-delete"
-    }
+
 
 
 }
