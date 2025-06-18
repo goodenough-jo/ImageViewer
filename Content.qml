@@ -2,6 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import Qt.labs.folderlistmodel  // 添加文件夹模型支持
+
+
 Item {
     property alias dialogs:_dialogs
 
@@ -27,6 +30,66 @@ Item {
             //StackLayout：管理多个项目
             StackLayout{
                 anchors.fill:parent//防止溢出
+
+                // TreeView {
+                //     id: directoryTree
+                //     model: FolderListModel {
+                //         id: folderModel
+                //         rootFolder: "file:///" + Qt.application.arguments[1] || StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]  // 默认显示用户主目录
+                //         showDirsFirst: true
+                //         nameFilters: ["*.jpg", "*.png", "*.bmp"]  // 只显示图片文件
+                //     }
+
+                //     // 自定义节点样式
+                //     delegate: TreeViewDelegate {
+                //         id: treeDelegate
+                //         implicitHeight: 30
+
+                //         contentItem: RowLayout {
+                //             spacing: 5
+                //             Image {
+                //                 source: model.isDir ? "qrc:/icons/folder.png" : "qrc:/icons/file.png"
+                //                 Layout.preferredWidth: 16
+                //                 Layout.preferredHeight: 16
+                //             }
+                //             Text {
+                //                 text: model.fileName
+                //                 elide: Text.ElideRight
+                //                 Layout.fillWidth: true
+                //             }
+                //         }
+
+                //         // 点击节点时加载该目录下的图片
+                //         TapHandler {
+                //             onTapped: {
+                //                 if (model.isDir) {
+                //                     folderModel.folder = "file:///" + model.filePath;
+                //                 } else {
+                //                     musicFiles.append({"filePath": model.fileURL});
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+
+                TreeView{
+                    id:folderTree
+                    model:FolderListModel{
+                        // rootFolder: "/root"
+                        // showDirsFirst: true
+                        rootFolder: "file:///"
+                        nameFilters: ["*.jpg","*.png"]
+                        showDirsFirst: true
+                        showDotAndDotDot: false
+                        showHidden: false
+
+                    }
+                    delegate:TreeViewDelegate{
+
+                    }
+                }
+
+
 
                 //工具栏
                 ScrollView{
@@ -75,7 +138,7 @@ Item {
                     }
                 }
 
-                //目录树
+
 
 
             }

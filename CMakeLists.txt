@@ -19,6 +19,7 @@ qt_add_qml_module(appplayer
     QML_FILES Content.qml
     QML_FILES Dialogs.qml
     QML_FILES
+    RESOURCES icon.qrc
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)
