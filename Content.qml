@@ -20,12 +20,13 @@ Item {
 
         Connections{
             target: fileStream
+
             function onFileRemoved(path)
             {
                 console.log("File removed signal received: " + path)
                 
                 // Remove file from model if it exists
-                for(let i = 0; i < musicFiles.count; i++) {
+                for(let i = 0; i < musicFiles.count; ++i) {
                     let modelPath = musicFiles.get(i).filePath.toString().replace("file://", "")
                     path = path.toString().replace("file://", "")
                     
@@ -53,6 +54,29 @@ Item {
                                 singlePlayer.source = ""
                                 console.log("Cleared player source")
                             }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            function onFileRenamed(oldPath,newPath)
+            {
+                oldPath = oldPath.toString().replace("file://", "")
+                newPath = newPath.toString().replace("file://", "")
+                console.log("File renamed from: " + oldPath + " to: " + newPath)
+                
+                for(let i=0; i<musicFiles.count; ++i)
+                {
+                    let modelPath = musicFiles.get(i).filePath.toString().replace("file://", "")
+                    if (modelPath === oldPath) {
+                        musicFiles.setProperty(i, "filePath", "file://" + newPath)
+                        console.log("Updated model at index " + i + " to: file://" + newPath)
+                        
+                        // Update player source if needed
+                        if(singlePlayer.source.toString().replace("file://", "") === oldPath) {
+                            singlePlayer.source = "file://" + newPath
+                            console.log("Updated player source to: file://" + newPath)
                         }
                         break;
                     }

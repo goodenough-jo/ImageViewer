@@ -68,3 +68,17 @@ QString FileStream::lastError() const
 {
     return m_lastError;
 }
+
+bool FileStream::renameFile(const QString &oldPath, const QString &newName)
+{
+    QFile file(oldPath);
+    QFileInfo info(oldPath);
+    QString newPath = info.path() + "/" + newName;
+    if (!newPath.endsWith("." + info.suffix())) { newPath += "." + info.suffix(); }
+
+    if (file.rename(newPath)) {
+        emit fileRenamed(oldPath, newPath);
+        return true;
+    }
+    return false;
+}

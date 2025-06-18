@@ -9,6 +9,7 @@ Item {
     property alias previous :_previous
     property alias tool:_tool
     property alias del:_delete
+    property alias rename:_rename
 
     Action{
         id:_open
@@ -47,6 +48,10 @@ Item {
         text:"remove"
         icon.name:"edit-delete"
     }
+    Action{
+        id:_rename
+        text:"Rename"
 
+    }
 
 }

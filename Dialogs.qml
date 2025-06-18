@@ -1,11 +1,13 @@
 import QtQuick
 import QtQuick.Dialogs
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     property alias openDialog: _openDialog
     property alias messageDialog: _messageDialog
     property alias confirmDialog: _confirmDialog
+    property alias renameDialog:_renameDialog
 
     FileDialog{
         id: _openDialog
@@ -43,6 +45,39 @@ Item {
             fileName = name
             text = "是否要删除 " + name + "？"
             open()
+        }
+    }
+
+    Dialog{
+        id:_renameDialog
+        title:"重命名"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        property string originalName:""
+        property string filePath:""
+
+        function rename(path) {
+            filePath = path
+            var name = path.toString().split("/").pop()
+            originalName = name
+            open()
+        }
+
+        ColumnLayout{
+            TextField{
+                id:namefield
+                text:originalName.split(".")[0]
+                selectByMouse: true
+                focus:true
+            }
+        }
+
+        onAccepted:{
+            if (namefield.text === "") return;
+            const result = fileStream.renameFile(filePath, namefield.text);
+            if (!result) {
+                messageDialog.show("重命名失败: " + fileStream.lastError(), true);
+            }
         }
     }
 }

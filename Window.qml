@@ -9,6 +9,7 @@ ApplicationWindow {
         RowLayout{
             ToolButton{action:actions.open}
             ToolButton{action:actions.del}
+            ToolButton{action:actions.rename}
             ToolSeparator{}
             ToolButton{action:actions.view}
             ToolButton{action:actions.see}
@@ -56,6 +57,11 @@ ApplicationWindow {
             var filePath = content.singlePlayer.source.toString().replace("file://","")
             content.dialogs.confirmDialog.confirm(filePath)
         }//delete按钮
+
+        rename.onTriggered: {
+            var filePath = content.singlePlayer.source.toString().replace("file://","")
+            content.dialogs.renameDialog.rename(filePath)
+        }//rename按钮
 
     }
 

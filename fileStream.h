@@ -12,8 +12,11 @@ public:
     Q_INVOKABLE bool moveToTrash(const QString &filePath);
     Q_INVOKABLE QString lastError() const;
 
+    Q_INVOKABLE bool renameFile(const QString &oldPath, const QString &newname);
+
 signals:
     void fileRemoved(const QString &path);
+    void fileRenamed(const QString &oldpath, const QString &newPath);
 
 private:
     QString m_lastError;
