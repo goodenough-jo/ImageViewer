@@ -10,6 +10,7 @@ Item {
     property alias tool:_tool
     property alias del:_delete
     property alias rename:_rename
+    property alias info:_info
 
     Action{
         id:_open
@@ -53,5 +54,8 @@ Item {
         text:"Rename"
 
     }
-
+    Action{
+        id:_info
+        text:"Information"
+    }
 }

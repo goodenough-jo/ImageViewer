@@ -8,11 +8,12 @@ Item {
     property alias messageDialog: _messageDialog
     property alias confirmDialog: _confirmDialog
     property alias renameDialog:_renameDialog
+    property alias infoPopup:_infoPopup
 
     FileDialog{
         id: _openDialog
         fileMode: FileDialog.OpenFiles
-        nameFilters: ["Select images (*.jpg)"]
+        nameFilters: ["Select images (*.jpg *.png)"]
     }
 
     MessageDialog{
@@ -71,7 +72,7 @@ Item {
                 focus:true
             }
         }
-
+        //封装有问题需要优化
         onAccepted:{
             if (namefield.text === "") return;
             const result = fileStream.renameFile(filePath, namefield.text);
@@ -80,4 +81,8 @@ Item {
             }
         }
     }
+    InfoPopup{
+        id:_infoPopup
+    }
+
 }

@@ -10,6 +10,8 @@ qt_standard_project_setup()
 
 qt_add_executable(appplayer)
 
+qt_policy(SET QTP0001 NEW)
+
 qt_add_qml_module(appplayer
     URI player
     VERSION 1.0
@@ -18,14 +20,10 @@ qt_add_qml_module(appplayer
     QML_FILES Actions.qml
     QML_FILES Content.qml
     QML_FILES Dialogs.qml
-    QML_FILES
-# <<<<<<< HEAD
     RESOURCES icon.qrc
-# =======
-    QML_FILES
     SOURCES fileStream.h fileStream.cpp
-    QML_FILES
-# >>>>>>> origin/dev
+    SOURCES fileInfo.h fileInfo.cpp
+    QML_FILES InfoPopup.qml
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)

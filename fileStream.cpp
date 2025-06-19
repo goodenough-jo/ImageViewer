@@ -71,10 +71,14 @@ QString FileStream::lastError() const
 
 bool FileStream::renameFile(const QString &oldPath, const QString &newName)
 {
-    QFile file(oldPath);
-    QFileInfo info(oldPath);
-    QString newPath = info.path() + "/" + newName;
-    if (!newPath.endsWith("." + info.suffix())) { newPath += "." + info.suffix(); }
+    QFile file(oldPath);                           //construct the file of the oldpath
+    QFileInfo info(oldPath);                       //get the file information
+    QString newPath = info.path() + "/" + newName; //combine the newpath
+    if (!newPath.endsWith("." + info.suffix())) {
+        //get the suffix of the file.If the file is lack of the suffix,it will be compensated
+        //this method is used to handle the problem under the situation when users add the suffix like "1.png"
+        newPath += "." + info.suffix();
+    }
 
     if (file.rename(newPath)) {
         emit fileRenamed(oldPath, newPath);

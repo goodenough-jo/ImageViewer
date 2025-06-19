@@ -10,6 +10,7 @@ ApplicationWindow {
             ToolButton{action:actions.open}
             ToolButton{action:actions.del}
             ToolButton{action:actions.rename}
+            ToolButton{action:actions.info}
             ToolSeparator{Layout.fillHeight: true}
             ToolButton{action:actions.view}
             ToolButton{action:actions.see}
@@ -62,7 +63,11 @@ ApplicationWindow {
             var filePath = content.singlePlayer.source.toString().replace("file://","")
             content.dialogs.renameDialog.rename(filePath)
         }//rename按钮
-
+        
+        info.onTriggered: {
+            var filePath = content.singlePlayer.source.toString()
+            content.dialogs.infoPopup.showInfo(filePath)
+        }//info按钮
     }
 
     Content{
