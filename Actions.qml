@@ -11,6 +11,10 @@ Item {
     property alias del:_delete
     property alias rename:_rename
     property alias info:_info
+    property alias rotateCCW: _rotationCCW
+    property alias rotateCW: _rotationCW
+    property alias zoomIn: _zoomIn
+    property alias zoomOut: _zoomOut
 
     Action{
         id:_open
@@ -52,10 +56,31 @@ Item {
     Action{
         id:_rename
         text:"Rename"
-
     }
     Action{
+
         id:_info
         text:"Information"
     }
+    Action{
+        id:_rotationCW
+        text:"Rotate CW"
+        icon.name: "object-rotate-right"
+    }//顺时针
+    Action{
+        id:_rotationCCW
+        text:"Rotate CCW"
+        icon.name: "object-rotate-left"
+    }//逆时针
+    Action{
+        id:_zoomIn
+        text:"Zoom In"
+        icon.name:"zoom-in"
+    }//放大
+    Action{
+        id:_zoomOut
+        text:"Zoom Out"
+        icon.name:"zoom-out"
+    }//缩小
+
 }

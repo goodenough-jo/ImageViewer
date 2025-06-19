@@ -24,6 +24,7 @@ qt_add_qml_module(appplayer
     SOURCES fileStream.h fileStream.cpp
     SOURCES fileInfo.h fileInfo.cpp
     QML_FILES InfoPopup.qml
+    QML_FILES Imager.qml
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)

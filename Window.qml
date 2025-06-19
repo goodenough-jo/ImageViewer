@@ -68,6 +68,30 @@ ApplicationWindow {
             var filePath = content.singlePlayer.source.toString()
             content.dialogs.infoPopup.showInfo(filePath)
         }//info按钮
+
+        rotateCCW.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.rotationCounterClockwise()
+            }
+        }//逆时针旋转
+
+        rotateCW.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.rotationClockwise()
+            }
+        }//顺时针旋转
+
+        zoomIn.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.zoomIn()
+            }
+        }//放大
+
+        zoomOut.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.zoomOut()
+            }
+        }//缩小
     }
 
     Content{
