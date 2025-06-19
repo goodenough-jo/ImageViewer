@@ -63,6 +63,29 @@ ApplicationWindow {
             content.dialogs.renameDialog.rename(filePath)
         }//rename按钮
 
+        rotateCCW.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.rotationCounterClockwise()
+            }
+        }//逆时针旋转
+
+        rotateCW.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.rotationClockwise()
+            }
+        }//顺时针旋转
+
+        zoomIn.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.zoomIn()
+            }
+        }//放大
+
+        zoomOut.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.zoomOut()
+            }
+        }//缩小
     }
 
     Content{

@@ -25,6 +25,7 @@ qt_add_qml_module(appplayer
     QML_FILES
     SOURCES fileStream.h fileStream.cpp
     QML_FILES
+    QML_FILES Imager.qml
 # >>>>>>> origin/dev
 )
 

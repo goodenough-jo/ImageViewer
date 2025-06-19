@@ -99,16 +99,33 @@ Item {
                         Label {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignCenter
+                            text: "Picture oprations"
                         }
 
+                        //顺时针
                         ToolButton {
                             Layout.fillWidth: true
-                            text: "Rotate to the left"
+                            // text: "Rotate to the left"
+                            action:actions.rotateCW
                         }
 
+                        //逆时针
                         ToolButton {
                             Layout.fillWidth: true
-                            text: "Rotate to the right"
+                            // text: "Rotate to the right"
+                            action:actions.rotateCCW
+                        }
+
+                        //放大
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.zoomIn
+                        }
+
+                        //缩小
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.zoomOut
                         }
 
                         ToolSeparator {
@@ -146,14 +163,14 @@ Item {
                 delegate: musicDelegate
             }
 
-            Image {
+            Imager {
                 id: _singlePlayer
                 anchors.fill: parent
                 visible: false
 
-                TapHandler {
-                    onTapped: singlePlayer.visible = false
-                }
+                // TapHandler {
+                //     onTapped: singlePlayer.visible = false
+                // }
 
                 Keys.onLeftPressed: {
                     if(currentIndex > 0) {
