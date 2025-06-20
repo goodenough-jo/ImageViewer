@@ -15,6 +15,8 @@ Item {
     property alias rotateCW: _rotationCW
     property alias zoomIn: _zoomIn
     property alias zoomOut: _zoomOut
+    property alias horizontalFlip: _horizontalFlip
+    property alias verticalFlip: _verticalFlip
 
     Action{
         id:_open
@@ -82,5 +84,15 @@ Item {
         text:"Zoom Out"
         icon.name:"zoom-out"
     }//缩小
+    Action{
+        id:_horizontalFlip
+        text:"Horizontal Flip"
+        icon.name: "object-flip-horizontal"
+    }//水平翻转
+    Action{
+        id:_verticalFlip
+        text:"Vertical Flip"
+        icon.name: "object-flip-vertical"
+    }//垂直翻转
 
 }

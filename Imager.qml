@@ -8,8 +8,6 @@ Item {
     visible:false
     focus: visible
 
-    // property alias rotationAngle:rotationAngle
-
     property url source
     property int rotationAngle : 0
     property real scaleFactor: 1.0      //缩放因子：现在尺寸=原来尺寸*缩放因子
@@ -18,10 +16,14 @@ Item {
     property point imageOffset: Qt.point(0,0)       //图片相对父窗口的偏移量
     property point dragStart: Qt.point(0,0)         //拖拽起点
     property bool isDragging:false                  //是否正在拖拽
+    property bool horizontalFlip: false
+    property bool verticalFlip: false
+    property real initialHeight: 500
+    property real initialWidth: 500
 
-    //复原 todo！！！
-    // onVisibleChanged: reset()
-    // onSourceChanged: reset()
+    //复原
+    onVisibleChanged: reset()
+    onSourceChanged: reset()
 
     Rectangle{
         id:bg
@@ -38,13 +40,27 @@ Item {
         // anchors.centerIn: parent
         // anchors.fill: parent
         //修改定位方式：使用x,y定位代替centerIn
-        x:(parent.width - width) / 2 + imageOffset.x    //newadd
-        y:(parent.height -height) / 2 + imageOffset.y   //newadd
-        width: Math.min(parent.width,parent.height) * scaleFactor
-        height: width
+        x:(parent.width - width) / 2 + imageOffset.x
+        y:(parent.height -height) / 2 + imageOffset.y
 
-        // scale: scaleFactor
+        //todo 可以设置一个全局变量来复制初始宽高
+        height: initialHeight
+        width: initialWidth
+        // height: width
+        // width: Math.min(parent.width,parent.height) * scaleFactor
+
+        scale: scaleFactor
         rotation: rotationAngle
+
+        //镜像翻转
+        transform:[
+            Scale{
+                origin.x: imageContainer.width / 2
+                origin.y:imageContainer.height / 2
+                xScale: horizontalFlip ? -1 : 1
+                yScale: verticalFlip ? -1 : 1
+            }
+        ]
 
         //transformOrigin 该属性包含缩放和旋转变化的原点，是枚举类型
         //自定义原点可用transform
@@ -57,7 +73,6 @@ Item {
             // fillMode: Image.PreserveAspectCrop   //图片自适应裁剪
             smooth: true    //缩放或拖拽时平滑过渡
             // antialiasing: true  //抗锯齿
-            // scale: scaleFactor
 
         }
 
@@ -73,8 +88,13 @@ Item {
             onWheel: (event) => {
                          if(event.modifiers & Qt.ControlModifier){
                              //计算缩放因子（基于滚轮旋转度数）
-                             const zoomFactor = 1 +event.angleDelta.y * zoomSensitivity / 1200
-                             scaleFactor = Math.max(minScale,Math.min(maxScale,zoomFactor))
+                             // const zoomFactor = 1 +event.angleDelta.y * zoomSensitivity / 1200
+                             const zoomFactor = event.angleDelta.y * zoomSensitivity / 1200
+                             scaleFactor = Math.max(minScale,Math.min(maxScale,zoomFactor+scaleFactor))
+                             //使用动态绑定，避免解除宽高和scaleFactor的绑定
+                             // scaleFactor = Qt.binding(function(){
+                             //     return Math.max(minScale,Math.min(maxScale,scaleFactor+zoomFactor))
+                             // })
 
                              // 尝试以鼠标位置为中心进行缩放，但是失败
                              // const containerPos = imageContainer.mapFromItem(null,event.x,event.y)
@@ -88,8 +108,8 @@ Item {
 
                              // imageContainer.scale = scaleFactor
 
-                             imageContainer.width = Math.min(parent.width,parent.height) * scaleFactor
-                             imageContainer.height= width
+                             // imageContainer.width = Math.min(parent.width,parent.height) * scaleFactor
+                             // imageContainer.height= width
                          }
                      }
         }
@@ -101,10 +121,13 @@ Item {
             // acceptedButtons: Qt.RightButton          //设置接受处理的鼠标按键，默认为左键
             target: null
 
+            property point tempOffset: Qt.point(0,0)
+
             //记录拖拽的起始位置
             onActiveChanged: {
                 if(active){
                     dragStart = Qt.point(imageOffset.x,imageOffset.y)
+                    tempOffset = dragStart
                     isDragging = true
                 }else{
                     isDragging = false
@@ -113,7 +136,12 @@ Item {
 
             //拖拽过程中更新位置
             onActiveTranslationChanged: {
-                imageOffset = Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)         //activeTranslation 记录拖拽时的平移量
+                tempOffset = Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)  //activeTranslation 记录拖拽时的平移量
+                imageOffset = Qt.binding(function(){
+                    return Qt.point(tempOffset.x,tempOffset.y)
+                })
+                // imageOffset = Qt.binding(function(){return Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)
+                // })
             }
         }
     }
@@ -141,16 +169,25 @@ Item {
                 scaleFactor = minScale;
         }
     }
-    //复原  todo！！！
+
+    function flipHorizontally(){
+        horizontalFlip = !horizontalFlip
+    }
+
+    function flipVertically(){
+        verticalFlip = !verticalFlip
+    }
+    //复原
     function reset(){
-        imageContainer.scale = 1.0;
-        // imageContainer.anchors.centerIn = parent
-        // imageContainer.x = 100
-        // imageContainer.y = 100
-        // imageContainer.x = (container.width-imageContainer.width) / 2;
-        // imageContainer.y = (container.height-imageContainer.height) / 2;
+        rotationAngle = 0
+        scaleFactor = 1.0
+        imageOffset = Qt.point(0,0)
+        horizontalFlip = false
+        verticalFlip =false
     }
 }
+
+
 
 // PinchHandler{
 //     id: pinchhandler

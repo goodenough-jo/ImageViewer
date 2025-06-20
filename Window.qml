@@ -92,6 +92,18 @@ ApplicationWindow {
                 content.singlePlayer.zoomOut()
             }
         }//缩小
+
+        horizontalFlip.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.flipHorizontally()
+            }
+        }//水平翻转
+
+        verticalFlip.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.flipVertically()
+            }
+        }//垂直翻转
     }
 
     Content{

@@ -116,6 +116,18 @@ Item {
                             action:actions.rotateCCW
                         }
 
+                        //水平翻转
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.horizontalFlip
+                        }
+
+                        //垂直翻转
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.verticalFlip
+                        }
+
                         //放大
                         ToolButton{
                             Layout.fillWidth: true
