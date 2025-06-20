@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Shapes
 
 Item {
     id:container
@@ -20,6 +21,93 @@ Item {
     property bool verticalFlip: false
     property real initialHeight: 500
     property real initialWidth: 500
+
+    property bool cropMode: false       //判断是否进入裁剪模式
+    property rect cropArea: Qt.rect(0,0,0,0)
+    property point cropStartPoint: Qt.point(0,0)
+    property point cropDragPoint: Qt.point(0,0)
+    property int activeCornner: -1      //-1:无活动角， 0:左上， 1:右上，2:右下， 3:左下角
+    property bool isCropDragging: false
+    property real aspectRatio: 0        //0表示自由比例
+
+
+    //切换裁剪模式
+    function toggleCropMode(){
+        cropMode = !cropMode;
+        if(cropMode){
+            //初始化裁剪区域
+
+            cropArea = Qt.rect(
+                        imageContainer.width * 0.25,
+                        imageContainer.height * 0.25,
+                        imageContainer.width * 0.5,
+                        imageContainer.height * 0.5
+            );
+
+            aspectRatio = 0;        //重置为自由比例
+        }
+    }
+
+    //只是计算出了裁剪区域，并没有实际裁剪图片
+    function cropImage(){
+        //获取图片实际显示区域
+        //paintedWidth 或paintedHeight表示实际绘制图像的大小。在大多数情况下，它与width 和height 相同，但在使用Image.PreserveAspectFit 或Image.PreserveAspectCrop 时，paintedWidth 或paintedHeight 可以小于或大于图像项的width 和height 。
+        const imgX = iamge.x + (image.width - image.paintedWidth) / 2       //图片实际显示区域的左上角在Image组件中的x坐标
+        const imgY = iamge.y + (image.height - image.paintedHeight) / 2     //图片实际显示区域的左上角在Image组件中的y坐标
+        const imgWidth = image.paintedWidth;                                //图片实际显示区域的宽度
+        const imgHeight = image.paintedHeight;                              //图片实际显示区域的高度
+
+        //计算在图像实际显示区域中的裁剪区域(裁剪区域不超过图片区域)
+        const cropInImage = Qt.rect(
+                              Math.max(0,(cropArea.x - imgX)),
+                              Math.max(0,(cropArea.y - imgY)),
+                              Math.min(cropArea.width,imgWidth),
+                              Math.min(cropArea.height,imgHeight)
+                            );
+
+        //映射到原始图片坐标     比率=原始/实际    =》 原始 = 比率*实际
+        const ratioX = image.sourceSize.width / imgWidth;
+        const ratioY = image.sourceSize.height / imgHeight;
+
+        const sourceCrop = Qt.rect(
+                             cropInImage.x * ratioX,
+                             cropInImage.y * ratioY,
+                             cropInImage.width * ratioX,
+                             cropInImage.height * ratioY
+                            );
+
+        console.log("Cropped Area:", sourceCrop);
+        // 实际应用中这里应该处理裁剪后的图像，比如保存或发送给其他组件
+
+        // 退出裁剪模式
+        toggleCropMode();
+    }
+
+    //固定比例裁剪
+    function setAspectRatio(ratio){
+        aspectRatio = ratio;
+        if(ratio <= 0) return;
+
+        const currentArea = container.cropArea;
+        const centerX = currentArea.x + currentArea.width / 2;
+        const centerY = currentArea.y + currentArea.height / 2;
+
+        let newWidth, newHeight;
+        if(currentArea.width / currentArea.height > ratio){
+            newWidth = currentArea.width;
+            newHeight = newWidth * ratio;
+        }else{
+            newWidth = currentArea.width;
+            newHeight = newWidth / ratio;
+        }
+
+        container.cropArea = Qt.rect(
+                    centerX - newWidth / 2,
+                    centerY - newHeight / 2,
+                    newWidth,
+                    newHeight
+                );
+    }
 
     //复原
     onVisibleChanged: reset()
@@ -121,11 +209,13 @@ Item {
             // acceptedButtons: Qt.RightButton          //设置接受处理的鼠标按键，默认为左键
             target: null
 
+            enabled: !container.cropMode        //newadd: 裁剪时禁止拖拽
+
             property point tempOffset: Qt.point(0,0)
 
             //记录拖拽的起始位置
             onActiveChanged: {
-                if(active){
+                if(active && !container.cropMode){      //newadd
                     dragStart = Qt.point(imageOffset.x,imageOffset.y)
                     tempOffset = dragStart
                     isDragging = true
@@ -136,15 +226,232 @@ Item {
 
             //拖拽过程中更新位置
             onActiveTranslationChanged: {
-                tempOffset = Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)  //activeTranslation 记录拖拽时的平移量
-                imageOffset = Qt.binding(function(){
-                    return Qt.point(tempOffset.x,tempOffset.y)
-                })
-                // imageOffset = Qt.binding(function(){return Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)
-                // })
+                if(!container.cropMode){        //newadd
+                    tempOffset = Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)  //activeTranslation 记录拖拽时的平移量
+                    imageOffset = Qt.binding(function(){
+                        return Qt.point(tempOffset.x,tempOffset.y)
+                    })
+                    // imageOffset = Qt.binding(function(){return Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)
+                    // })
+                }
+
             }
         }
     }
+
+    //裁剪层
+    Item{
+        id: cropOverlay
+        anchors.fill: parent
+        visible: container.cropMode
+
+        //半透明罩
+        Rectangle{
+            anchors.fill: parent
+            color: "black"
+            opacity: 0.4
+
+            //使用shape创建挖空效果（图片保留的内容)        ??????
+            Shape{
+                anchors.fill: parent
+                ShapePath{
+                    fillColor: "black"
+                    fillRule: ShapePath.OddEvenFill
+                    PathRectangle{x: 0; y: 0; width: parent.width; height: parent.height }
+                    PathRectangle{
+                        x: container.cropArea.x
+                        y: container.cropArea.y
+                        width: container.cropArea.width
+                        height: container.cropArea.height
+                    }
+                }
+            }
+        }
+
+        //裁剪框
+        Item{
+            id: cropFrame
+            x: container.cropArea.x
+            y: container.cropArea.y
+            width: container.cropArea.width
+            height: container.cropArea.height
+
+            //边框
+            Rectangle{
+                anchors.fill: parent
+                color: "transparent"
+                border.color: "white"
+                border.width: 1.5
+            }
+
+            //半透明内框
+            Rectangle{
+                anchors.fill: parent
+                anchors.margins: 1
+                color: "transparent"
+                border.color: "#40000000"
+                border.width: 1
+            }
+
+            //Repeater 类型用于创建大量类似的项目。与其他视图类型一样，Repeater 也有一个model 和一个delegate
+            Repeater{
+                model: 4
+                delegate: Rectangle{
+                    width: 16;
+                    height: 16;
+                    color: "white"
+                    border.width: 1
+                    border.color: "#80000000"
+
+                    //计算位置
+                    function getPosition(){
+                        switch(index){
+                        case 0: return Qt.point(0,0);   //左上
+                        case 1: return Qt.point(parent.width - width, 0);   //右上
+                        case 2: return Qt.point(parent.width - width, parent.height - height);  //右下
+                        case 3: return Qt.point(0,parent.height - height);  //左下
+                        default: return Qt.point(0,0);
+                        }
+                    }
+
+                    x: getPosition().x
+                    y: getPosition().y
+
+                    //点处理器
+                    PointHandler{
+                        id: cornerHandler
+                        acceptedDevices: PointerDevice.AllDevices
+                        cursorShape: {
+                            switch(index){
+                            case 0: return Qt.SizeFDiagCursor;
+                            case 1: return Qt.SizeBDiagCursor;
+                            case 2: return Qt.SizeFDiagCursor;
+                            case 3: return Qt.SizeBDiagCursor;
+                            default: return Qt.ArrowCursor;
+                            }
+                        }
+
+                        onPointChanged: {
+                            if(active){
+                                container.activeCornner = index;
+                                const pointInOverlay = cornerHandler.point.position;
+                                const overlayPoint = cropOverlay.mapFromItem(cornerHandler.target, pointInOverlay.x, pointInOverlay.y)
+
+                                updateCornerPosition(overlayPoint);
+                            }
+                        }
+
+                        onActiveChanged: {
+                            if(!active){
+                                container.activeCornner = -1;
+                            }
+                        }
+                    }
+
+                    function updateCornerPosition(point){
+                        const minSize = 30;
+
+                        let newX = container.cropArea.x;
+                        let newY = container.cropArea.y;
+                        let newWidth = container.cropArea.width;
+                        let newHeight = container.cropArea.height;
+
+                        switch(container.activeCornner){
+                        case 0://左上角
+                            if(aspectRatio > 0){
+                                const deltaX = container.cropArea.x - point.x;
+                                const deltaY = container.cropArea.y - point.y;
+                                const delta = aspectRatio > 1 ? deltaX : deltaY * aspectRatio;
+
+                                newX = Math.max(0, point.x);
+                                newY = container.cropArea.y - delta / aspectRatio;
+                                newWidth = Math.max(minSize, container.cropArea.width + (container.cropArea.x - newX));
+                                newHeight = Math.max(minSize, container.cropArea.height + (container.cropArea.y - newY));
+                            }else{
+                                newX = Math.max(0, Math.min(newX + newWidth - minSize, point.x));
+                                newY = Math.max(0, Math.min(newY + newHeight - minSize, point.y));
+                                newWidth = Math.max(minSize, container.cropArea.x + container.cropArea.width - newX);
+                                newHeight = Math.max(minSize, container.cropArea.y + container.cropArea.height - newY);
+                            }
+                            break;
+                        case 1://右上角
+                            newY = Math.max(0, Math.min(newY + newHeight - minSize, point.y));
+                            newWidth = Math.max(minSize, Math.min(cropOverlay.width - newX, point.x - newX));
+
+                            if (aspectRatio > 0) {
+                                newHeight = newWidth / aspectRatio;
+                            } else {
+                                newHeight = Math.max(minSize, container.cropArea.y + container.cropArea.height - newY);
+                            }
+                            break;
+                        case 2:
+                            newWidth = Math.max(minSize, Math.min(cropOverlay.width - newX, point.x - newX));
+
+                            if(aspectRatio > 0){
+                                newHeight = newWidth / aspectRatio;
+                            }else{
+                                newHeight = Math.max(minSize, Math.min(cropOverlay.height - newY, point.y - newY));
+                            }
+                            break;
+                        case 3:
+                            newX = Math.max(0, Math.min(newX + newWidth - minSize, point.x));
+                            newWidth = Math.max(minSize, container.cropArea.x + container.cropArea.width - newX);
+
+                            if(aspectRatio > 0){
+                                newHeight = newWidth / aspectRatio;
+                            }else{
+                                newHeight = Math.max(minSize, Math.min(cropOverlay.height - newY, point.y - newY));
+                            }
+                            break;
+                        }
+
+                        container.cropArea = Qt.rect(newX, newY, newWidth, newHeight);
+                    }
+                }
+            }
+
+            DragHandler{
+                id: frameDragHandler
+                target: null
+                acceptedDevices: PointerDevice.AllDevices
+                cursorShape: Qt.SizeAllCursor
+
+                property point startPosition: Qt.point(0,0)
+
+                onActiveChanged: {
+                    if(active){
+                        startPosition = Qt.point(container.cropArea.x, container.cropArea.y);
+                    }else{
+                        container.isCropDragging = false;
+                    }
+                }
+
+                onTranslationChanged: {
+                    const dx = translation.x;
+                    const dy = translation.y;
+
+                    const boundedX = Math.max(0,Math.min(
+                                                  cropOverlay.width - container.cropArea.width,
+                                                  startPosition.x + dx
+                                                  ));
+
+                    const boundedY = Math.max(0,Math.min(
+                                                  cropOverlay.height - container.cropArea.height,
+                                                  startPosition.y + dy
+                                                  ));
+
+                    container.cropArea = Qt.rect(
+                                boundedX,
+                                boundedY,
+                                container.cropArea.width,
+                                container.cropArea.height
+                                );
+                }
+            }
+        }
+    }
+
+
 
     function rotationClockwise(){
         rotationAngle = (rotationAngle + 90) % 360
@@ -177,6 +484,7 @@ Item {
     function flipVertically(){
         verticalFlip = !verticalFlip
     }
+
     //复原
     function reset(){
         rotationAngle = 0
@@ -184,6 +492,12 @@ Item {
         imageOffset = Qt.point(0,0)
         horizontalFlip = false
         verticalFlip =false
+        cropMode = false
+    }
+
+    //裁剪
+    function crop(){
+        cropMode = !cropMode
     }
 }
 
@@ -209,4 +523,77 @@ Item {
 //         scaleFactor = Math.max(minScale, Math.min(newScale, maxScale))
 //     }
 
+// }
+
+
+//todo:  裁剪控件布局
+// Rectangle {
+//     id: cropControlBar
+//     anchors {
+//         bottom: parent.bottom
+//         horizontalCenter: parent.horizontalCenter
+//         margins: 20
+//     }
+//     width: Math.min(parent.width - 40, 500)
+//     height: 60
+//     color: "#E6121212"
+//     radius: 8
+//     visible: cropMode
+//     opacity: 0.95
+
+//     // 控制按钮布局
+//     RowLayout {
+//         anchors.fill: parent
+//         anchors.margins: 10
+//         spacing: 10
+
+//         // 比例选择按钮
+//         Button {
+//             Layout.preferredWidth: 90
+//             text: "自由比例"
+//             checked: aspectRatio === 0
+//             checkable: true
+//             onClicked: setAspectRatio(0)
+//         }
+
+//         Button {
+//             Layout.preferredWidth: 70
+//             text: "1:1"
+//             checked: aspectRatio === 1
+//             checkable: true
+//             onClicked: setAspectRatio(1)
+//         }
+
+//         Button {
+//             Layout.preferredWidth: 70
+//             text: "4:3"
+//             checked: aspectRatio === 4/3
+//             checkable: true
+//             onClicked: setAspectRatio(4/3)
+//         }
+
+//         Button {
+//             Layout.preferredWidth: 70
+//             text: "16:9"
+//             checked: aspectRatio === 16/9
+//             checkable: true
+//             onClicked: setAspectRatio(16/9)
+//         }
+
+//         Item { Layout.fillWidth: true }
+
+//         // 控制按钮
+//         Button {
+//             text: "取消"
+//             Layout.preferredWidth: 80
+//             onClicked: toggleCropMode()
+//         }
+
+//         Button {
+//             text: "裁剪"
+//             Layout.preferredWidth: 80
+//             highlighted: true
+//             onClicked: cropImage()
+//         }
+//     }
 // }

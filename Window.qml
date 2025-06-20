@@ -104,6 +104,12 @@ ApplicationWindow {
                 content.singlePlayer.flipVertically()
             }
         }//垂直翻转
+
+        crop.onTriggered: {
+            if(content.singlePlayer.visible){
+                content.singlePlayer.crop()
+            }
+        }//裁剪
     }
 
     Content{

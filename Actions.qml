@@ -17,6 +17,7 @@ Item {
     property alias zoomOut: _zoomOut
     property alias horizontalFlip: _horizontalFlip
     property alias verticalFlip: _verticalFlip
+    property alias crop: _crop
 
     Action{
         id:_open
@@ -94,5 +95,9 @@ Item {
         text:"Vertical Flip"
         icon.name: "object-flip-vertical"
     }//垂直翻转
-
+    Action{
+        id:_crop
+        text: "Crop"
+        icon.name: "edit-cut"
+    }//裁剪
 }
