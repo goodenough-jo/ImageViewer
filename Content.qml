@@ -134,6 +134,12 @@ Item {
                             action:actions.zoomOut
                         }
 
+                        //裁剪
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.crop
+                        }
+
                         ToolSeparator {
                             orientation: Qt.Horizontal
                             Layout.fillWidth: true

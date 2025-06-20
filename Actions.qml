@@ -17,6 +17,7 @@ Item {
     property alias zoomOut: _zoomOut
     property alias horizontalFlip: _horizontalFlip
     property alias verticalFlip: _verticalFlip
+    property alias crop: _crop
 
     property alias fullscreen:_fullscreen//全屏
     property alias slidershow:_slideshow
@@ -102,6 +103,7 @@ Item {
         text:"Vertical Flip"
         icon.name: "object-flip-vertical"
     }//垂直翻转
+// <<<<<<< HEAD
 
 
     Action{
@@ -115,4 +117,11 @@ Item {
         text: "Slideshow"
         icon.name: "media-playback-start"
     }//幻灯片播放
+// =======
+    Action{
+        id:_crop
+        text: "Crop"
+        icon.name: "edit-cut"
+    }//裁剪
+// >>>>>>> origin/dev
 }
