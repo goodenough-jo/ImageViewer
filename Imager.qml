@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
+
 
 Item {
     id:container
@@ -21,6 +23,9 @@ Item {
     property real initialHeight: 500
     property real initialWidth: 500
 
+
+    property bool isFullscreen:false
+
     //复原
     onVisibleChanged: reset()
     onSourceChanged: reset()
@@ -32,7 +37,12 @@ Item {
         opacity: 1      //不透明度  0.7蛮好看的
 
         TapHandler{
-            onTapped: container.visible = false
+            // onTapped: container.visible = false
+            onTapped: {
+                if (!isFullscreen) {
+                    container.visible = false
+                }
+            }//修改：在全屏下禁止返回多图浏览
         }
     }
     Item{
@@ -185,6 +195,9 @@ Item {
         horizontalFlip = false
         verticalFlip =false
     }
+
+
+
 }
 
 

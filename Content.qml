@@ -5,6 +5,7 @@ import QtQuick.Dialogs
 import Qt.labs.folderlistmodel
 
 Item {
+    property alias leftPage :_leftPage
     property alias dialogs: _dialogs
     property ListModel musicFiles: ListModel {}
     property int currentIndex: -1
@@ -18,6 +19,8 @@ Item {
         id: split
         anchors.fill: parent
         orientation: Qt.Horizontal
+
+        //连接文件操作
         Connections{
             target: fileStream
 
@@ -69,26 +72,17 @@ Item {
             }
 
         }
+
+
         // 左侧面板(目录树/工具)
         Page {
-            id: leftPage
+            id: _leftPage
             implicitWidth: 200
 
             StackLayout {
                 anchors.fill: parent
 
-                // // 目录树
-                // TreeView {
-                //     id: folderTree
-                //     model: FolderListModel {
-                //         rootFolder: "file:///"
-                //         nameFilters: ["*.jpg", "*.png"]
-                //         showDirsFirst: true
-                //         showDotAndDotDot: false
-                //         showHidden: false
-                //     }
-                //     delegate: TreeViewDelegate {}
-                // }
+
 
                 // 工具栏
                 ScrollView {
@@ -145,6 +139,8 @@ Item {
                             Layout.fillWidth: true
                         }
 
+                        //文件操作
+
                         Label {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignCenter
@@ -153,13 +149,18 @@ Item {
 
                         ToolButton {
                             Layout.fillWidth: true
-                            text: "Move to..."
-                        }
+                            action:actions.del
+                        }//删除
 
                         ToolButton {
                             Layout.fillWidth: true
-                            text: "Rename"
-                        }
+                            action:actions.rename
+                        }//重命名
+
+                        ToolButton {
+                            Layout.fillWidth: true
+                            action:actions.info
+                        }//信息
                     }
                 }
             }
@@ -179,10 +180,6 @@ Item {
                 id: _singlePlayer
                 anchors.fill: parent
                 visible: false
-
-                // TapHandler {
-                //     onTapped: singlePlayer.visible = false
-                // }
 
                 Keys.onLeftPressed: {
                     if(currentIndex > 0) {
