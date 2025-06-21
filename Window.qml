@@ -116,7 +116,6 @@ ApplicationWindow {
             }
         }//垂直翻转
 
-// <<<<<<< HEAD
 
         // 全屏按钮事件处理
         fullscreen.onTriggered: {
@@ -155,13 +154,11 @@ ApplicationWindow {
         }
 
 
-// =======
         crop.onTriggered: {
             if(content.singlePlayer.visible){
                 content.singlePlayer.crop()
             }
         }//裁剪
-// >>>>>>> origin/dev
     }
 
     // 添加计时器

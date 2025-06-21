@@ -78,7 +78,7 @@ Item {
         Page {
             id: _leftPage
             implicitWidth: 200
-
+            z:999
             StackLayout {
                 anchors.fill: parent
 

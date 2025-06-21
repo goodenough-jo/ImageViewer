@@ -1,12 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-// <<<<<<< HEAD
 import QtQuick.Window
-
-// =======
 import QtQuick.Shapes
-// >>>>>>> origin/dev
 
 Item {
     id:container
@@ -27,10 +23,8 @@ Item {
     property real initialHeight: 500
     property real initialWidth: 500
 
-// <<<<<<< HEAD
 
     property bool isFullscreen:false
-// =======
     property bool cropMode: false       //判断是否进入裁剪模式
     property rect cropArea: Qt.rect(0,0,0,0)
     property point cropStartPoint: Qt.point(0,0)
@@ -117,7 +111,6 @@ Item {
                     newHeight
                 );
     }
-// >>>>>>> origin/dev
 
     //复原
     onVisibleChanged: reset()
