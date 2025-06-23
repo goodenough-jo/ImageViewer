@@ -11,6 +11,7 @@ ApplicationWindow {
     property int slideshowInterval: 2000 // 默认2秒切换一次
 
     width: 900;height: 700;visible: true
+    title:"图片浏览器"
 
 
     header: ToolBar{
@@ -161,6 +162,13 @@ ApplicationWindow {
         }//裁剪
     }
 
+    Content{
+        id:content
+    }
+
+
+
+
     // 添加计时器
     Timer {
         id: slideshowTimer
@@ -177,7 +185,4 @@ ApplicationWindow {
     }
 
 
-    Content{
-        id:content
-    }
 }
