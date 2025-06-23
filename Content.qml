@@ -78,7 +78,7 @@ Item {
         Page {
             id: _leftPage
             implicitWidth: 200
-
+            z:999
             StackLayout {
                 anchors.fill: parent
 
@@ -139,6 +139,23 @@ Item {
                             Layout.fillWidth: true
                             action:actions.crop
                         }
+
+                        ToolButton{
+                            Layout.fillWidth: true
+                            text:"Annotation"
+                            icon.name: "draw-brush"
+                            // onClicked: {
+                            //     openAnnotationWiondow(musicFiles.get(currentIndex).filePath)//传递URL
+                            // }
+                            onClicked: {
+                                if (singlePlayer.visible && singlePlayer.source.toString() !== "") {
+                                    openAnnotationWiondow(singlePlayer.source)
+                                } else {
+                                    console.log("请先选择一张图片")
+                                }
+                            }
+                        }//图片标注
+
 
                         ToolSeparator {
                             orientation: Qt.Horizontal
@@ -210,6 +227,7 @@ Item {
         id: musicDelegate
         Image {
             source: filePath
+            fillMode:Image.PreserveAspectFit //保持原本缩放比例
             width: gridView.cellWidth - 10
             height: gridView.cellHeight - 10
             TapHandler {
@@ -255,6 +273,15 @@ Item {
         //         console.log("图片已保存到：",filePath)
         //     }
         // }
+    }
+
+    //标注图片窗口
+    AnnotationWindow{
+        id:annotationWindow
+    }
+
+    function openAnnotationWiondow(imagePath){
+        annotationWindow.open(imagePath)
     }
 }
 

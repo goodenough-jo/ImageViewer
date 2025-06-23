@@ -1,10 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
 import QtQuick.Window
-
 import QtQuick.Shapes
+
 
 Item {
     id:container
@@ -26,7 +25,6 @@ Item {
     property real initialWidth: 500
 
     property bool isFullscreen:false
-
     property bool cropMode: false       //判断是否进入裁剪模式
     property rect cropArea: Qt.rect(0,0,0,0)
     property point cropStartPoint: Qt.point(0,0)

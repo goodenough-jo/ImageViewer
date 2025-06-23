@@ -11,6 +11,7 @@ ApplicationWindow {
     property int slideshowInterval: 2000 // 默认2秒切换一次
 
     width: 900;height: 700;visible: true
+    title:"图片浏览器"
 
 
     header: ToolBar{
@@ -116,7 +117,6 @@ ApplicationWindow {
             }
         }//垂直翻转
 
-// <<<<<<< HEAD
 
         // 全屏按钮事件处理
         fullscreen.onTriggered: {
@@ -155,14 +155,19 @@ ApplicationWindow {
         }
 
 
-// =======
         crop.onTriggered: {
             if(content.singlePlayer.visible){
                 content.singlePlayer.toggleCropMode()
             }
         }//裁剪
-// >>>>>>> origin/dev
     }
+
+    Content{
+        id:content
+    }
+
+
+
 
     // 添加计时器
     Timer {
@@ -180,7 +185,4 @@ ApplicationWindow {
     }
 
 
-    Content{
-        id:content
-    }
 }
