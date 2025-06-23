@@ -18,6 +18,7 @@ ApplicationWindow {
             ToolButton{action:actions.previous}
             ToolButton{action:actions.next}
             ToolButton{action:actions.tool}
+            ToolButton{action:actions.saveAs}
         }
     }
 
@@ -92,6 +93,11 @@ ApplicationWindow {
                 content.singlePlayer.zoomOut()
             }
         }//缩小
+
+        saveAs.onTriggered:{
+            var filePath=content.singlePlayer.source.toString().replace("file://","")
+            content.dialogs.saveDialog.save(filePath)
+        }//另存为
     }
 
     Content{

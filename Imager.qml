@@ -59,6 +59,7 @@ Item {
             // antialiasing: true  //抗锯齿
             // scale: scaleFactor
 
+
         }
 
         WheelHandler{
@@ -116,6 +117,9 @@ Item {
                 imageOffset = Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)         //activeTranslation 记录拖拽时的平移量
             }
         }
+
+
+
     }
 
     function rotationClockwise(){

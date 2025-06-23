@@ -15,6 +15,7 @@ Item {
     property alias rotateCW: _rotationCW
     property alias zoomIn: _zoomIn
     property alias zoomOut: _zoomOut
+    property alias saveAs: _save
 
     Action{
         id:_open
@@ -82,5 +83,9 @@ Item {
         text:"Zoom Out"
         icon.name:"zoom-out"
     }//缩小
-
+    Action{
+        id:_save
+        text:"Save As"
+        icon.name:"document-save-as"
+    }//保存
 }

@@ -1,10 +1,13 @@
 #include "fileStream.h"
+#include <QGuiApplication>
 #include <QFile>
 #include <QDir>
 #include <QUrl>
 #include <QDateTime>
 #include <QStandardPaths>
 #include <QSaveFile>
+#include <QImage>
+#include <QClipboard>
 
 FileStream::FileStream(QObject *parent) : QObject(parent) {}
 
@@ -85,4 +88,47 @@ bool FileStream::renameFile(const QString &oldPath, const QString &newName)
         return true;
     }
     return false;
+}
+
+void FileStream::copyImageOnclick(const QString &imagePath)
+{
+    QImage image(imagePath);
+    if (!image.isNull()) { QGuiApplication::clipboard()->setImage(image); }
+}
+
+bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
+{
+    m_lastError.clear();
+
+    // 处理源路径，检查是否已经包含file://前缀
+    QString srcPath;
+    if (sourcePath.startsWith("file://")) {
+        srcPath = QUrl(sourcePath).toLocalFile();
+    } else {
+        srcPath = sourcePath;  // 直接使用没有前缀的路径
+    }
+    
+    // 处理目标路径
+    QString dstPath;
+    if (newPath.startsWith("file://")) {
+        dstPath = QUrl(newPath).toLocalFile();
+    } else {
+        dstPath = newPath;
+    }
+
+    QFile sourceFile(srcPath);
+    QFile destFile(dstPath);
+
+    if (!sourceFile.exists()) {
+        m_lastError = "源文件不存在: " + srcPath;
+        return false;
+    }
+
+    // Try to copy the file
+    if (destFile.exists()) {
+        m_lastError = "无法保存文件: " + dstPath;
+        return false;
+    }
+
+    return sourceFile.copy(dstPath);
 }

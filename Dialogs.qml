@@ -9,6 +9,7 @@ Item {
     property alias confirmDialog: _confirmDialog
     property alias renameDialog:_renameDialog
     property alias infoPopup:_infoPopup
+    property alias saveDialog:_saveDialog
 
     FileDialog{
         id: _openDialog
@@ -67,7 +68,7 @@ Item {
         ColumnLayout{
             TextField{
                 id:namefield
-                text:originalName.split(".")[0]
+                text:_renameDialog.originalName.split(".")[0]
                 selectByMouse: true
                 focus:true
             }
@@ -81,8 +82,66 @@ Item {
             }
         }
     }
+
     InfoPopup{
         id:_infoPopup
     }
 
+    FileDialog{
+        id:_saveDialog
+        title: "保存图片"
+        fileMode: FileDialog.SaveFile
+        //defaultSuffix:""
+        
+        property string sourceFilePath: ""
+        property string currentExtension: ""
+
+        function getFileExtension(path) {
+            return path.substring(path.lastIndexOf(".") + 1).toLowerCase()
+        }
+        
+        function save(path) {
+            sourceFilePath = path
+            currentExtension = getFileExtension(path)
+            defaultSuffix = currentExtension//defaultSuffix只有在用户没有明确指定扩展名时才会生效
+            
+            // 根据原始图片格式设置过滤器顺序
+            //原先的方案在 nameFilters 中，PNG 格式被列在第一位：["Image files (*.png *.jpg *.bmp)"]
+            //当用户选择"Image files"过滤器时，Qt 会使用过滤器中的第一个扩展名（.png）作为默认扩展名
+            if (currentExtension === "jpg" || currentExtension === "jpeg") {
+                nameFilters = ["JPEG图片 (*.jpg *.jpeg)", "PNG图片 (*.png)", "BMP图片 (*.bmp)"]
+            } else if (currentExtension === "png") {
+                nameFilters = ["PNG图片 (*.png)", "JPEG图片 (*.jpg *.jpeg)", "BMP图片 (*.bmp)"]
+            } else if (currentExtension === "bmp") {
+                nameFilters = ["BMP图片 (*.bmp)", "PNG图片 (*.png)", "JPEG图片 (*.jpg *.jpeg)"]
+            } else {
+                nameFilters = ["图片文件 (*.png *.jpg *.jpeg *.bmp)"]
+            }
+            
+            open()
+        }
+        //封装需要优化
+        onAccepted: {
+            if (sourceFilePath === "") return;
+            
+            // 获取选择的文件路径
+            let filePath = selectedFile.toString();
+            
+            // 检查是否需要添加扩展名，只有一个一个检查才能保证图片的后缀并不会被改变
+            if (!filePath.toLowerCase().endsWith("." + currentExtension) && 
+                !filePath.toLowerCase().endsWith(".jpg") && 
+                !filePath.toLowerCase().endsWith(".jpeg") && 
+                !filePath.toLowerCase().endsWith(".png") && 
+                !filePath.toLowerCase().endsWith(".bmp")) {
+                filePath = filePath + "." + currentExtension;
+            }
+
+            const result = fileStream.saveAs(sourceFilePath, filePath);
+            if (result) {
+                messageDialog.show("图片保存成功");
+            } else {
+                messageDialog.show("保存失败: " + fileStream.lastError(), true);
+            }
+        }
+    }
 }

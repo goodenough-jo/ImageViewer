@@ -14,6 +14,9 @@ public:
 
     Q_INVOKABLE bool renameFile(const QString &oldPath, const QString &newname);
 
+    Q_INVOKABLE void copyImageOnclick(const QString &imagePath);
+    Q_INVOKABLE bool saveAs(const QString &sourcePath, const QString &newPath);
+
 signals:
     void fileRemoved(const QString &path);
     void fileRenamed(const QString &oldpath, const QString &newPath);

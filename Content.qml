@@ -148,6 +148,8 @@ Item {
                             Layout.fillWidth: true
                             text: "Rename"
                         }
+                        
+
                     }
                 }
             }
@@ -183,6 +185,37 @@ Item {
                     if(currentIndex < musicFiles.count - 1) {
                         currentIndex++
                         source = musicFiles.get(currentIndex).filePath
+                    }
+                }
+                Menu {
+                    id: mouseMenu
+                    MenuItem {
+                        text: "复制"
+                        onTriggered: {
+                            if (singlePlayer.visible && singlePlayer.source !== "") {
+                                fileStream.copyImageOnclick(singlePlayer.source.toString().replace("file://", ""))
+                                dialogs.messageDialog.show("图片已复制到剪贴板")
+                            }
+                        }
+                    }
+                    MenuItem {
+                        icon.name:"document-save-as"
+                        text: "另存为"
+                        onTriggered: {
+                            if (singlePlayer.visible && singlePlayer.source !== "") {
+                                var filePath = singlePlayer.source.toString().replace("file://", "")
+                                dialogs.saveDialog.save(filePath)
+                            }
+                        }
+                    }
+                }
+                
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: function(eventPoint) {
+                        mouseMenu.x = eventPoint.position.x
+                        mouseMenu.y = eventPoint.position.y
+                        mouseMenu.open()
                     }
                 }
             }
@@ -229,6 +262,7 @@ Item {
                 messageDialog.show("删除失败：" + fileStream.lastError(), true)
             }
         }
+
     }
 }
 

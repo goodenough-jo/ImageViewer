@@ -199,9 +199,8 @@ Popup {
         }
         
         // 防止点击内容区域关闭弹窗
-        MouseArea {
-            anchors.fill: parent
-            onClicked: function(event) {
+        TapHandler{
+            onTapped: function(event) {
                 event.accepted = true;
             }
         }
