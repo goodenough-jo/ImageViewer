@@ -9,6 +9,7 @@ Item {
     property alias confirmDialog: _confirmDialog
     property alias renameDialog:_renameDialog
     property alias infoPopup:_infoPopup
+    property alias saveImageDialog: _saveImageDialog
 
     FileDialog{
         id: _openDialog
@@ -83,6 +84,27 @@ Item {
     }
     InfoPopup{
         id:_infoPopup
+    }
+
+    FileDialog{
+        id: _saveImageDialog
+        title: "保存图片"
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "png"
+        nameFilters: ["PNG图像（*.png）","JPEG图像（*.jpg）"]
+        // currentFolder:
+        property var imageToSave: null
+
+        onAccepted: {
+            let filePath = selectedFile.toString()
+            console.log("路径：",filePath)
+            if(imageToSave){
+                imageToSave.saveToFile(filePath)
+                singlePlayer.croppedImageUrl = filePath
+                singlePlayer.croppingFinished(filePath)
+                console.log("图片已保存到：",filePath)
+            }
+        }
     }
 
 }

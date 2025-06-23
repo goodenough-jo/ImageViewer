@@ -158,7 +158,7 @@ ApplicationWindow {
 // =======
         crop.onTriggered: {
             if(content.singlePlayer.visible){
-                content.singlePlayer.crop()
+                content.singlePlayer.toggleCropMode()
             }
         }//裁剪
 // >>>>>>> origin/dev

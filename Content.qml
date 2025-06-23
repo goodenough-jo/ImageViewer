@@ -244,6 +244,17 @@ Item {
                 messageDialog.show("删除失败：" + fileStream.lastError(), true)
             }
         }
+
+        // saveImageDialog.onAccepted: {
+        //     let filePath = saveImageDialog.selectedFile.toString()
+
+        //     if(saveImageDialog.imageToSave){
+        //         saveImageDialog.imageToSave.saveToFile(filePath)
+        //         singlePlayer.croppedImageUrl = filePath
+        //         singlePlayer.croppingFinished(filePath)
+        //         console.log("图片已保存到：",filePath)
+        //     }
+        // }
     }
 }
 

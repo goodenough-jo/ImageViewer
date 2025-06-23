@@ -1,12 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-// <<<<<<< HEAD
+
 import QtQuick.Window
 
-// =======
 import QtQuick.Shapes
-// >>>>>>> origin/dev
 
 Item {
     id:container
@@ -27,10 +25,8 @@ Item {
     property real initialHeight: 500
     property real initialWidth: 500
 
-// <<<<<<< HEAD
-
     property bool isFullscreen:false
-// =======
+
     property bool cropMode: false       //判断是否进入裁剪模式
     property rect cropArea: Qt.rect(0,0,0,0)
     property point cropStartPoint: Qt.point(0,0)
@@ -39,6 +35,9 @@ Item {
     property bool isCropDragging: false
     property real aspectRatio: 0        //0表示自由比例
 
+    property url croppedImageUrl:""
+    signal croppingFinished(url imageUrl)
+    signal croppingCancelled()
 
     //切换裁剪模式
     function toggleCropMode(){
@@ -57,21 +56,32 @@ Item {
         }
     }
 
+    Canvas{
+        id: hiddenCanvas
+        visible: false
+    }
+
     //只是计算出了裁剪区域，并没有实际裁剪图片
     function cropImage(){
+
+        if (image.status !== Image.Ready) {
+            console.error("Image not ready for cropping");
+            return;
+        }
+
         //获取图片实际显示区域
         //paintedWidth 或paintedHeight表示实际绘制图像的大小。在大多数情况下，它与width 和height 相同，但在使用Image.PreserveAspectFit 或Image.PreserveAspectCrop 时，paintedWidth 或paintedHeight 可以小于或大于图像项的width 和height 。
-        const imgX = iamge.x + (image.width - image.paintedWidth) / 2       //图片实际显示区域的左上角在Image组件中的x坐标
-        const imgY = iamge.y + (image.height - image.paintedHeight) / 2     //图片实际显示区域的左上角在Image组件中的y坐标
+        const imgX = image.x + (image.width - image.paintedWidth) / 2       //图片实际显示区域的左上角在Image组件中的x坐标
+        const imgY = image.y + (image.height - image.paintedHeight) / 2     //图片实际显示区域的左上角在Image组件中的y坐标
         const imgWidth = image.paintedWidth;                                //图片实际显示区域的宽度
         const imgHeight = image.paintedHeight;                              //图片实际显示区域的高度
 
         //计算在图像实际显示区域中的裁剪区域(裁剪区域不超过图片区域)
         const cropInImage = Qt.rect(
-                              Math.max(0,(cropArea.x - imgX)),
-                              Math.max(0,(cropArea.y - imgY)),
-                              Math.min(cropArea.width,imgWidth),
-                              Math.min(cropArea.height,imgHeight)
+                              Math.max(0,Math.min(imgWidth - 1,cropArea.x - imgX)),
+                              Math.max(0,Math.min(imgHeight - 1,cropArea.y - imgY)),
+                              Math.max(1,Math.min(imgWidth- (cropArea.x - imgX),cropArea.width)),
+                              Math.max(1,Math.min(imgHeight - (cropArea.y - imgY),cropArea.height))
                             );
 
         //映射到原始图片坐标     比率=原始/实际    =》 原始 = 比率*实际
@@ -83,13 +93,59 @@ Item {
                              cropInImage.y * ratioY,
                              cropInImage.width * ratioX,
                              cropInImage.height * ratioY
-                            );
+                             );
+        // const sourceCrop = Qt.binding(function(){return Qt.rect(
+        //                                              cropInImage.x * ratioX,
+        //                                              cropInImage.y * ratioY,
+        //                                              cropInImage.width * ratioX,
+        //                                              cropInImage.height * ratioY
+        //                                             );
+        // })
 
-        console.log("Cropped Area:", sourceCrop);
-        // 实际应用中这里应该处理裁剪后的图像，比如保存或发送给其他组件
+        //前面这段限制裁剪框范围的代码貌似没有起到作用、、、
 
-        // 退出裁剪模式
+        // console.log("Cropped Area:", sourceCrop);
+        // // 实际应用中这里应该处理裁剪后的图像，比如保存或发送给其他组件
+
+        // 验证尺寸
+        if (sourceCrop.width <= 0 || sourceCrop.height <= 0) {
+            console.error("Invalid crop dimensions:", sourceCrop.width, sourceCrop.height);
+            return;
+        }
+
+        // hiddenCanvas.width = sourceCrop.width
+        // hiddenCanvas.height = sourceCrop.height
+        hiddenCanvas.width = Math.max(1,sourceCrop.width);
+        hiddenCanvas.height = Math.max(1,sourceCrop.height);
+
+        //获取上下文并绘制
+        const ctx = hiddenCanvas.getContext("2d");
+        ctx.reset();
+        ctx.drawImage(container.source,
+                      sourceCrop.x, sourceCrop.y, sourceCrop.width, sourceCrop.height,
+                      0, 0, hiddenCanvas.width, hiddenCanvas.height);
+
+        //捕获图像
+        hiddenCanvas.grabToImage(function(result){
+            // const tempFile = "file:///tmp/cropped_image.png";        //???
+            // result.saveToFile(tempFile);
+            // container.croppedImageUrl = tempFile;
+            // container.croppingFinished(tempFile);
+            if(result){
+                //设置要保存的图像并打开对话框
+                dialogs.saveImageDialog.imageToSave = result
+                dialogs.saveImageDialog.open()
+            }else{
+                console.error("无法创建裁剪图像")
+                container.croppingCancelled()
+            }
+        },Qt.size(sourceCrop.width, sourceCrop.height));
+
+        // 退出裁剪模式（下次进入裁剪模式会重置裁剪范围）
         toggleCropMode();
+
+        // 推出裁剪模式（下次进入裁剪模式时仍然是上次的裁剪框大小和位置）
+        // cropMode = !cropMode;
     }
 
     //固定比例裁剪
@@ -117,7 +173,6 @@ Item {
                     newHeight
                 );
     }
-// >>>>>>> origin/dev
 
     //复原
     onVisibleChanged: reset()
@@ -146,7 +201,7 @@ Item {
         x:(parent.width - width) / 2 + imageOffset.x
         y:(parent.height -height) / 2 + imageOffset.y
 
-        //todo 可以设置一个全局变量来复制初始宽高
+        //可以设置一个全局变量来复制初始宽高
         height: initialHeight
         width: initialWidth
         // height: width
@@ -467,6 +522,77 @@ Item {
     }
 
 
+    //todo:  裁剪控件布局
+    Rectangle {
+        id: cropControlBar
+        anchors {
+            bottom: parent.bottom
+            horizontalCenter: parent.horizontalCenter
+            margins: 20
+        }
+        width: Math.min(parent.width - 40, 500)
+        height: 60
+        color: "#E6121212"
+        radius: 8
+        visible: cropMode
+        opacity: 0.95
+
+        // 控制按钮布局
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 10
+
+            // 比例选择按钮
+            Button {
+                Layout.preferredWidth: 90
+                text: "自由比例"
+                checked: aspectRatio === 0
+                checkable: true
+                onClicked: setAspectRatio(0)
+            }
+
+            Button {
+                Layout.preferredWidth: 70
+                text: "1:1"
+                checked: aspectRatio === 1
+                checkable: true
+                onClicked: setAspectRatio(1)
+            }
+
+            Button {
+                Layout.preferredWidth: 70
+                text: "4:3"
+                checked: aspectRatio === 4/3
+                checkable: true
+                onClicked: setAspectRatio(4/3)
+            }
+
+            Button {
+                Layout.preferredWidth: 70
+                text: "16:9"
+                checked: aspectRatio === 16/9
+                checkable: true
+                onClicked: setAspectRatio(16/9)
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // 控制按钮
+            Button {
+                text: "取消"
+                Layout.preferredWidth: 80
+                onClicked: toggleCropMode()
+            }
+
+            Button {
+                text: "裁剪"
+                Layout.preferredWidth: 80
+                highlighted: true
+                onClicked: cropImage()
+            }
+        }
+    }
 
     function rotationClockwise(){
         rotationAngle = (rotationAngle + 90) % 360
@@ -510,13 +636,6 @@ Item {
         cropMode = false
     }
 
-    //裁剪
-    function crop(){
-        cropMode = !cropMode
-    }
-
-
-
 }
 
 
@@ -541,77 +660,4 @@ Item {
 //         scaleFactor = Math.max(minScale, Math.min(newScale, maxScale))
 //     }
 
-// }
-
-
-//todo:  裁剪控件布局
-// Rectangle {
-//     id: cropControlBar
-//     anchors {
-//         bottom: parent.bottom
-//         horizontalCenter: parent.horizontalCenter
-//         margins: 20
-//     }
-//     width: Math.min(parent.width - 40, 500)
-//     height: 60
-//     color: "#E6121212"
-//     radius: 8
-//     visible: cropMode
-//     opacity: 0.95
-
-//     // 控制按钮布局
-//     RowLayout {
-//         anchors.fill: parent
-//         anchors.margins: 10
-//         spacing: 10
-
-//         // 比例选择按钮
-//         Button {
-//             Layout.preferredWidth: 90
-//             text: "自由比例"
-//             checked: aspectRatio === 0
-//             checkable: true
-//             onClicked: setAspectRatio(0)
-//         }
-
-//         Button {
-//             Layout.preferredWidth: 70
-//             text: "1:1"
-//             checked: aspectRatio === 1
-//             checkable: true
-//             onClicked: setAspectRatio(1)
-//         }
-
-//         Button {
-//             Layout.preferredWidth: 70
-//             text: "4:3"
-//             checked: aspectRatio === 4/3
-//             checkable: true
-//             onClicked: setAspectRatio(4/3)
-//         }
-
-//         Button {
-//             Layout.preferredWidth: 70
-//             text: "16:9"
-//             checked: aspectRatio === 16/9
-//             checkable: true
-//             onClicked: setAspectRatio(16/9)
-//         }
-
-//         Item { Layout.fillWidth: true }
-
-//         // 控制按钮
-//         Button {
-//             text: "取消"
-//             Layout.preferredWidth: 80
-//             onClicked: toggleCropMode()
-//         }
-
-//         Button {
-//             text: "裁剪"
-//             Layout.preferredWidth: 80
-//             highlighted: true
-//             onClicked: cropImage()
-//         }
-//     }
 // }
