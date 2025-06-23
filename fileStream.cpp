@@ -8,6 +8,9 @@
 #include <QSaveFile>
 #include <QImage>
 #include <QClipboard>
+#include <QBuffer>
+#include <QImageWriter>
+#include <QDebug>
 
 FileStream::FileStream(QObject *parent) : QObject(parent) {}
 
@@ -105,9 +108,9 @@ bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
     if (sourcePath.startsWith("file://")) {
         srcPath = QUrl(sourcePath).toLocalFile();
     } else {
-        srcPath = sourcePath;  // 直接使用没有前缀的路径
+        srcPath = sourcePath; // 直接使用没有前缀的路径
     }
-    
+
     // 处理目标路径
     QString dstPath;
     if (newPath.startsWith("file://")) {
@@ -124,11 +127,42 @@ bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
         return false;
     }
 
-    // Try to copy the file
-    if (destFile.exists()) {
+    // 使用QFile::copy前检查源文件和目标文件是否相同
+    if (srcPath == dstPath) {
+        // 如果源文件和目标文件相同，则无需复制
+        return true;
+    }
+
+    // 如果源文件和目标文件不同，使用QSaveFile来安全地覆盖文件
+    QSaveFile saveFile(dstPath);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        m_lastError = "无法创建目标文件: " + dstPath;
+        return false;
+    }
+
+    // 打开源文件
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        m_lastError = "无法打开源文件: " + srcPath;
+        saveFile.cancelWriting();
+        return false;
+    }
+
+    // 复制文件内容
+    QByteArray data = sourceFile.readAll();     //获得最初的二进制数据
+    qint64 bytesWritten = saveFile.write(data); //返回实际写入的字节数
+    sourceFile.close();
+
+    if (bytesWritten != data.size()) { //利用字节数匹配完成检测文件是否写入完整
+        m_lastError = "写入数据不完整";
+        saveFile.cancelWriting();
+        return false;
+    }
+
+    // 提交更改，这会安全地替换目标文件
+    if (!saveFile.commit()) {
         m_lastError = "无法保存文件: " + dstPath;
         return false;
     }
 
-    return sourceFile.copy(dstPath);
+    return true;
 }

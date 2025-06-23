@@ -26,6 +26,7 @@ qt_add_qml_module(appplayer
     QML_FILES InfoPopup.qml
     QML_FILES Imager.qml
     SOURCES filelead.h filelead.cpp
+    QML_FILES AnnotationWindow.qml
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)

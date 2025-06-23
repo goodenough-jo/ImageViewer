@@ -9,7 +9,9 @@ Item {
     property alias confirmDialog: _confirmDialog
     property alias renameDialog:_renameDialog
     property alias infoPopup:_infoPopup
-    property alias saveDialog:_saveDialog
+    property alias saveDialog:_saveImageDialog
+    property alias saveAsDialog:_saveDialog
+
 
     FileDialog{
         id: _openDialog
@@ -25,7 +27,7 @@ Item {
 
         function show(text, isError=false)
         {
-            messageDialog.text = text;
+            _messageDialog.text = text;
             open()
         }
     }
@@ -75,10 +77,11 @@ Item {
         }
         //封装有问题需要优化
         onAccepted:{
+
             if (namefield.text === "") return;
             const result = fileStream.renameFile(filePath, namefield.text);
             if (!result) {
-                messageDialog.show("重命名失败: " + fileStream.lastError(), true);
+                _messageDialog.show("重命名失败: " + fileStream.lastError(), true);
             }
         }
     }
@@ -95,16 +98,25 @@ Item {
         
         property string sourceFilePath: ""
         property string currentExtension: ""
+        property string originalFormat:""
+
 
         function getFileExtension(path) {
-            return path.substring(path.lastIndexOf(".") + 1).toLowerCase()
+ 
+            let pathStr = path.toString();
+            return pathStr.substring(pathStr.lastIndexOf(".") + 1).toLowerCase();
         }
         
         function save(path) {
             sourceFilePath = path
             currentExtension = getFileExtension(path)
             defaultSuffix = currentExtension//defaultSuffix只有在用户没有明确指定扩展名时才会生效
-            
+
+            if (originalFormat !== "") {
+                currentExtension = originalFormat
+                defaultSuffix = originalFormat
+            }
+
             // 根据原始图片格式设置过滤器顺序
             //原先的方案在 nameFilters 中，PNG 格式被列在第一位：["Image files (*.png *.jpg *.bmp)"]
             //当用户选择"Image files"过滤器时，Qt 会使用过滤器中的第一个扩展名（.png）作为默认扩展名
@@ -122,10 +134,25 @@ Item {
         }
         //封装需要优化
         onAccepted: {
+
             if (sourceFilePath === "") return;
-            
+
             // 获取选择的文件路径
             let filePath = selectedFile.toString();
+            let fileExtension = "";
+            
+            // 确保使用字符串方法
+            if (filePath.indexOf('.') !== -1) {
+                fileExtension = filePath.substring(filePath.lastIndexOf('.') + 1).toLowerCase();
+            }
+            
+            // 添加扩展名
+            if (fileExtension === "" || (originalFormat !== "" && fileExtension !== originalFormat)) {
+                if (fileExtension !== "") {
+                    filePath = filePath.substring(0, filePath.lastIndexOf('.'));
+                }
+                filePath = filePath + "." + (originalFormat !== "" ? originalFormat : "png");
+             }
             
             // 检查是否需要添加扩展名，只有一个一个检查才能保证图片的后缀并不会被改变
             if (!filePath.toLowerCase().endsWith("." + currentExtension) && 
@@ -136,11 +163,35 @@ Item {
                 filePath = filePath + "." + currentExtension;
             }
 
+            console.log("使用文件复制方式保存: " + sourceFilePath + " 到 " + filePath);
             const result = fileStream.saveAs(sourceFilePath, filePath);
             if (result) {
-                messageDialog.show("图片保存成功");
+                console.log("图片保存成功");
+                _messageDialog.show("图片保存成功");
             } else {
-                messageDialog.show("保存失败: " + fileStream.lastError(), true);
+                console.error("图片保存失败: " + fileStream.lastError());
+                _messageDialog.show("保存失败: " + fileStream.lastError(), true);
+            }
+        }
+    }
+
+    FileDialog{
+        id: _saveImageDialog
+        title: "保存图片"
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "png"
+        nameFilters: ["PNG图像（*.png）","JPEG图像（*.jpg）"]
+        // currentFolder:
+        property var imageToSave: null
+
+        onAccepted: {
+            let filePath = selectedFile.toString()
+            console.log("路径：",filePath)
+            if(imageToSave){
+                imageToSave.saveToFile(filePath)
+                singlePlayer.croppedImageUrl = filePath
+                singlePlayer.croppingFinished(filePath)
+                console.log("图片已保存到：",filePath)
             }
         }
     }

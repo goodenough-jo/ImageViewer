@@ -16,6 +16,11 @@ Item {
     property alias zoomIn: _zoomIn
     property alias zoomOut: _zoomOut
     property alias saveAs: _save
+    property alias horizontalFlip: _horizontalFlip
+    property alias verticalFlip: _verticalFlip
+    property alias crop: _crop
+    property alias fullscreen:_fullscreen//全屏
+    property alias slidershow:_slideshow
 
     Action{
         id:_open
@@ -26,12 +31,12 @@ Item {
     Action{
         id:_view
         text:"view"
-        icon.name:"document-properties"
+        icon.name:"view-grid"
     }
     Action{
         id:_see
         text:"see"
-        icon.name:"document-properties"
+        icon.name:"document-preview"
     }
 
     Action{
@@ -44,11 +49,13 @@ Item {
         // text: "previous"
         icon.name:"go-previous"
     }
+
     Action{
         id:_tool
         text:"tool"
         icon.name:"document-properties"
     }
+
     Action{
         id:_delete
         text:"remove"
@@ -57,11 +64,13 @@ Item {
     Action{
         id:_rename
         text:"Rename"
+        icon.name:"accessories-text-editor"
     }
     Action{
 
         id:_info
         text:"Information"
+        icon.name:"dialog-information"
     }
     Action{
         id:_rotationCW
@@ -88,4 +97,32 @@ Item {
         text:"Save As"
         icon.name:"document-save-as"
     }//保存
+    Action{
+        id:_horizontalFlip
+        text:"Horizontal Flip"
+        icon.name: "object-flip-horizontal"
+    }//水平翻转
+    Action{
+        id:_verticalFlip
+        text:"Vertical Flip"
+        icon.name: "object-flip-vertical"
+    }//垂直翻转
+
+
+    Action{
+        id:_fullscreen
+        text:"Fullscreen"
+        icon.name:"view-fullscreen"
+    }//全屏按钮
+
+    Action {
+        id: _slideshow
+        text: "Slideshow"
+        icon.name: "media-playback-start"
+    }//幻灯片播放
+    Action{
+        id:_crop
+        text: "Crop"
+        icon.name: "edit-cut"
+    }//裁剪
 }

@@ -5,6 +5,7 @@ import QtQuick.Dialogs
 import Qt.labs.folderlistmodel
 
 Item {
+    property alias leftPage :_leftPage
     property alias dialogs: _dialogs
     property ListModel musicFiles: ListModel {}
     property int currentIndex: -1
@@ -18,6 +19,8 @@ Item {
         id: split
         anchors.fill: parent
         orientation: Qt.Horizontal
+
+        //连接文件操作
         Connections{
             target: fileStream
 
@@ -69,26 +72,17 @@ Item {
             }
 
         }
+
+
         // 左侧面板(目录树/工具)
         Page {
-            id: leftPage
+            id: _leftPage
             implicitWidth: 200
-
+            z:999
             StackLayout {
                 anchors.fill: parent
 
-                // // 目录树
-                // TreeView {
-                //     id: folderTree
-                //     model: FolderListModel {
-                //         rootFolder: "file:///"
-                //         nameFilters: ["*.jpg", "*.png"]
-                //         showDirsFirst: true
-                //         showDotAndDotDot: false
-                //         showHidden: false
-                //     }
-                //     delegate: TreeViewDelegate {}
-                // }
+
 
                 // 工具栏
                 ScrollView {
@@ -116,6 +110,18 @@ Item {
                             action:actions.rotateCCW
                         }
 
+                        //水平翻转
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.horizontalFlip
+                        }
+
+                        //垂直翻转
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.verticalFlip
+                        }
+
                         //放大
                         ToolButton{
                             Layout.fillWidth: true
@@ -128,10 +134,35 @@ Item {
                             action:actions.zoomOut
                         }
 
+                        //裁剪
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.crop
+                        }
+
+                        ToolButton{
+                            Layout.fillWidth: true
+                            text:"Annotation"
+                            icon.name: "draw-brush"
+                            // onClicked: {
+                            //     openAnnotationWiondow(musicFiles.get(currentIndex).filePath)//传递URL
+                            // }
+                            onClicked: {
+                                if (singlePlayer.visible && singlePlayer.source.toString() !== "") {
+                                    openAnnotationWiondow(singlePlayer.source)
+                                } else {
+                                    console.log("请先选择一张图片")
+                                }
+                            }
+                        }//图片标注
+
+
                         ToolSeparator {
                             orientation: Qt.Horizontal
                             Layout.fillWidth: true
                         }
+
+                        //文件操作
 
                         Label {
                             Layout.fillWidth: true
@@ -141,15 +172,19 @@ Item {
 
                         ToolButton {
                             Layout.fillWidth: true
-                            text: "Move to..."
-                        }
+                            action:actions.del
+                        }//删除
 
                         ToolButton {
                             Layout.fillWidth: true
                             text: "Rename"
-                        }
-                        
+                            action:actions.rename
+                        }//重命名
 
+                        ToolButton {
+                            Layout.fillWidth: true
+                            action:actions.info
+                        }//信息
                     }
                 }
             }
@@ -165,14 +200,10 @@ Item {
                 delegate: musicDelegate
             }
 
-            Imager {
+            Imager{
                 id: _singlePlayer
                 anchors.fill: parent
                 visible: false
-
-                // TapHandler {
-                //     onTapped: singlePlayer.visible = false
-                // }
 
                 Keys.onLeftPressed: {
                     if(currentIndex > 0) {
@@ -203,7 +234,7 @@ Item {
                         text: "另存为"
                         onTriggered: {
                             if (singlePlayer.visible && singlePlayer.source !== "") {
-                                var filePath = singlePlayer.source.toString().replace("file://", "")
+                                var filePath = singlePlayer.source
                                 dialogs.saveDialog.save(filePath)
                             }
                         }
@@ -228,6 +259,7 @@ Item {
         id: musicDelegate
         Image {
             source: filePath
+            fillMode:Image.PreserveAspectFit //保持原本缩放比例
             width: gridView.cellWidth - 10
             height: gridView.cellHeight - 10
             TapHandler {
@@ -262,7 +294,25 @@ Item {
                 messageDialog.show("删除失败：" + fileStream.lastError(), true)
             }
         }
+        // saveImageDialog.onAccepted: {
+        //     let filePath = saveImageDialog.selectedFile.toString()
 
+        //     if(saveImageDialog.imageToSave){
+        //         saveImageDialog.imageToSave.saveToFile(filePath)
+        //         singlePlayer.croppedImageUrl = filePath
+        //         singlePlayer.croppingFinished(filePath)
+        //         console.log("图片已保存到：",filePath)
+        //     }
+        // }
+    }
+
+    //标注图片窗口
+    AnnotationWindow{
+        id:annotationWindow
+    }
+
+    function openAnnotationWiondow(imagePath){
+        annotationWindow.open(imagePath)
     }
 }
 
