@@ -8,6 +8,9 @@ find_package(Qt6 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup()
 
+# Enable QML_ELEMENT macro support
+set(QT_QML_SOURCE_LOCATION ON)
+
 qt_add_executable(appplayer)
 
 qt_policy(SET QTP0001 NEW)
@@ -27,6 +30,7 @@ qt_add_qml_module(appplayer
     QML_FILES Imager.qml
     SOURCES filelead.h filelead.cpp
     QML_FILES AnnotationWindow.qml
+    QML_FILES Tree.qml
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)

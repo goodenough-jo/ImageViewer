@@ -82,7 +82,10 @@ Item {
             StackLayout {
                 anchors.fill: parent
 
-
+                Tree{
+                    Layout.alignment:Qt.AlignLeft
+                    id:_tree
+                }
 
                 // 工具栏
                 ScrollView {
