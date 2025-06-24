@@ -61,6 +61,7 @@ Item {
 
     //只是计算出了裁剪区域，并没有实际裁剪图片
     function cropImage(){
+        console.log("source:"+source.toString())
 
         if (image.status !== Image.Ready) {
             console.error("Image not ready for cropping");
@@ -92,18 +93,14 @@ Item {
                              cropInImage.width * ratioX,
                              cropInImage.height * ratioY
                              );
-        // const sourceCrop = Qt.binding(function(){return Qt.rect(
-        //                                              cropInImage.x * ratioX,
-        //                                              cropInImage.y * ratioY,
-        //                                              cropInImage.width * ratioX,
-        //                                              cropInImage.height * ratioY
-        //                                             );
-        // })
 
-        //前面这段限制裁剪框范围的代码貌似没有起到作用、、、
 
-        // console.log("Cropped Area:", sourceCrop);
-        // // 实际应用中这里应该处理裁剪后的图像，比如保存或发送给其他组件
+        //打印scourceCrop坐标
+        console.log("sourceCrop.x:"+sourceCrop.x)
+        console.log("sourceCrop.y:"+sourceCrop.y)
+        console.log("sourceCrop.width:"+sourceCrop.width)
+        console.log("sourceCrop.height:"+sourceCrop.height)
+
 
         // 验证尺寸
         if (sourceCrop.width <= 0 || sourceCrop.height <= 0) {
@@ -111,10 +108,16 @@ Item {
             return;
         }
 
-        // hiddenCanvas.width = sourceCrop.width
-        // hiddenCanvas.height = sourceCrop.height
+
         hiddenCanvas.width = Math.max(1,sourceCrop.width);
         hiddenCanvas.height = Math.max(1,sourceCrop.height);
+
+        //打印hiddenCanvas的坐标
+        console.log("hiddenCanvas.x:"+hiddenCanvas.x)
+        console.log("hiddenCanvas.y:"+hiddenCanvas.y)
+        console.log("hiddenCanvas.width:"+hiddenCanvas.width)
+        console.log("hiddenCanvas.height:"+hiddenCanvas.height)
+
 
         //获取上下文并绘制
         const ctx = hiddenCanvas.getContext("2d");
@@ -125,14 +128,12 @@ Item {
 
         //捕获图像
         hiddenCanvas.grabToImage(function(result){
-            // const tempFile = "file:///tmp/cropped_image.png";        //???
-            // result.saveToFile(tempFile);
-            // container.croppedImageUrl = tempFile;
-            // container.croppingFinished(tempFile);
+
             if(result){
-                //设置要保存的图像并打开对话框
-                dialogs.saveDialog.imageToSave = result
-                dialogs.saveDialog.open()
+                // //设置要保存的图像并打开对话框
+                // dialogs.saveDialog.imageToSave = result
+                // dialogs.saveDialog.open()
+                result.saveToFile("file:///root/crop.png")
             }else{
                 console.error("无法创建裁剪图像")
                 container.croppingCancelled()
@@ -248,34 +249,14 @@ Item {
                              // const zoomFactor = 1 +event.angleDelta.y * zoomSensitivity / 1200
                              const zoomFactor = event.angleDelta.y * zoomSensitivity / 1200
                              scaleFactor = Math.max(minScale,Math.min(maxScale,zoomFactor+scaleFactor))
-                             //使用动态绑定，避免解除宽高和scaleFactor的绑定
-                             // scaleFactor = Qt.binding(function(){
-                             //     return Math.max(minScale,Math.min(maxScale,scaleFactor+zoomFactor))
-                             // })
 
-                             // 尝试以鼠标位置为中心进行缩放，但是失败
-                             // const containerPos = imageContainer.mapFromItem(null,event.x,event.y)
-                             // const scaleRatio = newScale / scaleFactor
-                             // imageOffset = Qt.point(
-                             //     imageOffset.x +(containerPos.x - imageContainer.width / 2)*(1- 1/scaleRatio),
-                             //     imageOffset.y +(containerPos.y - imageContainer.height / 2)*(1- 1/scaleRatio))
-
-                             // imageContainer.x = (container.width-imageContainer.width) / 2 + imageOffset.x;
-                             // imageContainer.y = (container.height-imageContainer.height) / 2 + imageOffset.y;
-
-                             // imageContainer.scale = scaleFactor
-
-                             // imageContainer.width = Math.min(parent.width,parent.height) * scaleFactor
-                             // imageContainer.height= width
                          }
                      }
         }
 
         DragHandler{
             id:dragHandler
-            // dragThreshold: 5    //该属性可设置拖拽阀值
-            //acceptedDevices: PointerDevice.Mouse      //设置处理的设备，默认鼠标和触控屏的拖拽事件都能处理
-            // acceptedButtons: Qt.RightButton          //设置接受处理的鼠标按键，默认为左键
+
             target: null
 
             enabled: !container.cropMode        //newadd: 裁剪时禁止拖拽
@@ -300,8 +281,7 @@ Item {
                     imageOffset = Qt.binding(function(){
                         return Qt.point(tempOffset.x,tempOffset.y)
                     })
-                    // imageOffset = Qt.binding(function(){return Qt.point(dragStart.x + activeTranslation.x,dragStart.y + activeTranslation.y)
-                    // })
+
                 }
 
             }
@@ -640,26 +620,3 @@ Item {
 
 }
 
-
-
-// PinchHandler{
-//     id: pinchhandler
-//     target: iamgeContainer
-
-//     //activeScale  执行捏合手势时的缩放因子
-//     //activeRotation    执行捏合手势时的旋转角度
-
-
-
-//     minimumScale: minScale
-//     maximumScale: maxScale
-
-//     property real startScale
-//     onActiveChanged: if(active) startScale = scaleFactor
-
-//     onScaleChanged: {
-//         let newScale = startScale * pinchHandler.scale
-//         scaleFactor = Math.max(minScale, Math.min(newScale, maxScale))
-//     }
-
-// }
