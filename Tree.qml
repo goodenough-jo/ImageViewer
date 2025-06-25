@@ -10,6 +10,11 @@ TreeView {
     id: treeView
     anchors.fill: parent
     
+    property bool isLoadingFolder: false
+    property var musicFiles: null  // 将在 Content.qml 中连接到实际的模型
+
+    signal loadFolder(string folderPath)  // 新增信号，用于通知外部加载文件夹
+    
     // 设置数据模型为FileLead类型
     model: FileLead {
         id: fileModel
@@ -49,11 +54,11 @@ TreeView {
         contentItem: Row {
             spacing: 4
 
-            // 文件夹图标
             Image {
                 width: 16
                 height: 16
                 anchors.verticalCenter: parent.verticalCenter
+                source: "qrc:/images/folder.svg"
             }
             
             // 目录名称 - 只显示文件夹名称，而非完整路径
@@ -65,10 +70,22 @@ TreeView {
             }
         }
         
-        // 点击处理，输出选中的路径
+        // 点击处理，输出选中的路径并触发信号
         onClicked: {
             console.log("Selected path:", model.filePath)
-            // 也可以使用 fileModel.filePath(treeView.index(row, 0)) 获取路径
+            
+            // 现在所有显示的项目都是文件夹，直接触发加载信号
+            if (!isLoadingFolder) {
+                isLoadingFolder = true
+
+                let path = model.filePath.toString()
+                if (path.startsWith("file://")) {
+                    path = path.substring(7)
+                }
+                
+                // 触发加载文件夹信号
+                loadFolder(path)
+            }
         }
     }
 }

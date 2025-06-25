@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import Qt.labs.folderlistmodel
+import QtQuick.Effects
 
 Item {
     property alias leftPage :_leftPage
@@ -11,9 +12,69 @@ Item {
     property int currentIndex: -1
     property alias singlePlayer: _singlePlayer
     property alias gridView: _multiPic
+    property string currentFolderPath: "" // 当前显示的文件夹路径
+    property FolderListModel folderModel: FolderListModel {
+        nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp"]
+        showDirs: false
+        property bool isLoading: status === FolderListModel.Loading
+        
+        onStatusChanged: {
+            if (status === FolderListModel.Ready) {
+                loadImagesFromModel()
+            }
+        }
+    }
 
     id: _content
     anchors.fill: parent
+
+    // 加载文件夹中的图片
+    function loadFolderImages(folderPath) {
+        console.log("Loading images from folder:", folderPath)
+        currentFolderPath = folderPath
+        
+        // 清空当前模型
+        musicFiles.clear()
+        currentIndex = -1
+        
+        // 设置文件夹模型的路径
+        folderModel.folder = "file://" + folderPath
+        
+        // 显示图片视图
+        singlePlayer.visible = false
+    }
+    
+    // 从文件夹模型加载图片到列表模型
+    function loadImagesFromModel() {
+        console.log("Model status changed, count:", folderModel.count)
+        
+        // 将图片添加到模型
+        for (let i = 0; i < folderModel.count; i++) {
+            let fileUrl = folderModel.get(i, "fileURL")
+            musicFiles.append({"filePath": fileUrl})
+        }
+        
+        console.log("Loaded " + folderModel.count + " images")
+        
+        // 更新网格视图布局
+        updateGridLayout()
+    }
+    
+    // 根据窗口大小更新网格视图布局
+    function updateGridLayout() {
+        let availableWidth = rightContainer.width
+        // 计算可以放多少列，假设每个项目宽度为180
+        let columns = Math.max(1, Math.floor(availableWidth / 180))
+        _multiPic.cellWidth = availableWidth / columns
+    }
+    
+    // 窗口大小变化时更新网格布局
+    Connections {
+        target: rightContainer
+        function onWidthChanged() {
+            updateGridLayout()
+        }
+    }
 
     SplitView {
         id: split
@@ -70,7 +131,6 @@ Item {
                     }
                 }
             }
-
         }
 
         Page {
@@ -102,11 +162,16 @@ Item {
                 anchors.fill: parent
                 currentIndex: 1
 
-
-
                 Tree{
                     Layout.alignment:Qt.AlignLeft
                     id:_tree
+                    musicFiles: musicFiles // 连接到 Content 的 musicFiles 属性
+                    
+                    // 处理 loadFolder 信号
+                    onLoadFolder: function(folderPath) {
+                        loadFolderImages(folderPath)
+                        _tree.isLoadingFolder = false // 重置加载状态
+                    }
                 }
 
                 // 工具栏
@@ -169,9 +234,6 @@ Item {
                             Layout.fillWidth: true
                             text:"Annotation"
                             icon.name: "draw-brush"
-                            // onClicked: {
-                            //     openAnnotationWiondow(musicFiles.get(currentIndex).filePath)//传递URL
-                            // }
                             onClicked: {
                                 if (singlePlayer.visible && singlePlayer.source.toString() !== "") {
                                     openAnnotationWiondow(singlePlayer.source)
@@ -180,7 +242,6 @@ Item {
                                 }
                             }
                         }//图片标注
-
 
                         ToolSeparator {
                             orientation: Qt.Horizontal
@@ -215,8 +276,6 @@ Item {
                             Layout.fillWidth: true
                             action:actions.info
                         }//信息
-
-
                     }
                 }
             }
@@ -225,11 +284,64 @@ Item {
         // 右侧内容区域
         Item {
             id: rightContainer
+            
+            // 当前文件夹标题
+            Rectangle {
+                id: folderTitle
+                anchors.top: parent.top
+                width: parent.width
+                height: 30
+                color: "#f0f0f0"
+                visible: currentFolderPath !== ""
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: {
+                        if (currentFolderPath === "") return ""
+                        let parts = currentFolderPath.split('/')
+                        let folderName = parts[parts.length - 1]
+                        return "当前目录: " + folderName
+                    }
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+            }
+            
             GridView {
                 id: _multiPic
-                anchors.fill: parent
+                anchors.top: folderTitle.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
                 model: musicFiles
                 delegate: musicDelegate
+                cellHeight: 180
+                clip: true
+                
+                // 在组件完成后初始化布局
+                Component.onCompleted: {
+                    updateGridLayout()
+                }
+                
+                // 添加滚动条
+                ScrollBar.vertical: ScrollBar {}
+                
+                // 加载状态指示器
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    running: folderModel.isLoading
+                    visible: running
+                    width: 48
+                    height: 48
+                }
+                
+                // 空文件夹提示
+                Text {
+                    anchors.centerIn: parent
+                    text: "当前文件夹没有图片"
+                    font.pixelSize: 16
+                    visible: musicFiles.count === 0 && currentFolderPath !== ""
+                }
             }
 
             Imager{
@@ -282,25 +394,79 @@ Item {
                     }
                 }
             }
-
-
         }
     }
 
     Component {
         id: musicDelegate
-        Image {
-            source: filePath
-            fillMode:Image.PreserveAspectFit //保持原本缩放比例
+        Item {
             width: gridView.cellWidth - 10
             height: gridView.cellHeight - 10
+            
+            // 边框
+            Rectangle {
+                id: itemBg
+                anchors.fill: parent
+                color: "transparent"
+                border.color: hoverHandler.hovered ? "#4CAF50" : "#e0e0e0"
+                border.width: hoverHandler.hovered ? 2 : 1
+                radius: 4
+            }
+            
+            Image {
+                id: img
+                source: filePath
+                anchors.fill: parent
+                anchors.margins: 5
+                anchors.bottomMargin: 25 // 留出空间显示文件名
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                
+                // 图片加载指示器
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    running: img.status === Image.Loading
+                    visible: running
+                    width: 32
+                    height: 32
+                }
+            }
+            
+            // 文件名标签
+            Text {
+                anchors {
+                    bottom: parent.bottom
+                    horizontalCenter: parent.horizontalCenter
+                    bottomMargin: 2
+                }
+                width: parent.width - 10
+                text: {
+                    let path = filePath.toString()
+                    if (path.startsWith("file://")) {
+                        path = path.substring(7)
+                    }
+                    let parts = path.split('/')
+                    return parts[parts.length - 1]
+                }
+                elide: Text.ElideMiddle
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: 11
+            }
+            
+            // 使用 TapHandler 处理点击事件
             TapHandler {
+                id: tapHandler
                 onDoubleTapped: {
                     singlePlayer.focus = true
                     singlePlayer.source = filePath
                     singlePlayer.visible = true
                     currentIndex = index
                 }
+            }
+            
+            // 使用 HoverHandler 处理悬停效果
+            HoverHandler {
+                id: hoverHandler
             }
         }
     }
@@ -326,16 +492,6 @@ Item {
                 messageDialog.show("删除失败：" + fileStream.lastError(), true)
             }
         }
-        // saveImageDialog.onAccepted: {
-        //     let filePath = saveImageDialog.selectedFile.toString()
-
-        //     if(saveImageDialog.imageToSave){
-        //         saveImageDialog.imageToSave.saveToFile(filePath)
-        //         singlePlayer.croppedImageUrl = filePath
-        //         singlePlayer.croppingFinished(filePath)
-        //         console.log("图片已保存到：",filePath)
-        //     }
-        // }
     }
 
     //标注图片窗口
