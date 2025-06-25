@@ -7,7 +7,6 @@ Item {
     property alias see:_see
     property alias next:_next
     property alias previous :_previous
-    property alias tool:_tool
     property alias del:_delete
     property alias rename:_rename
     property alias info:_info
@@ -50,11 +49,11 @@ Item {
         icon.name:"go-previous"
     }
 
-    Action{
-        id:_tool
-        text:"tool"
-        icon.name:"document-properties"
-    }
+    // Action{
+    //     id:_tool
+    //     text:"tool"
+    //     icon.name:"document-properties"
+    // }
 
     Action{
         id:_delete

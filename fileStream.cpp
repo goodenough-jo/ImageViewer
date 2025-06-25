@@ -11,6 +11,7 @@
 #include <QBuffer>
 #include <QImageWriter>
 #include <QDebug>
+#include <QMimeDatabase>
 
 FileStream::FileStream(QObject *parent) : QObject(parent) {}
 
@@ -108,9 +109,9 @@ bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
     if (sourcePath.startsWith("file://")) {
         srcPath = QUrl(sourcePath).toLocalFile();
     } else {
-        srcPath = sourcePath; // 直接使用没有前缀的路径
+        srcPath = sourcePath;  // 直接使用没有前缀的路径
     }
-
+    
     // 处理目标路径
     QString dstPath;
     if (newPath.startsWith("file://")) {
@@ -127,42 +128,56 @@ bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
         return false;
     }
 
-    // 使用QFile::copy前检查源文件和目标文件是否相同
-    if (srcPath == dstPath) {
-        // 如果源文件和目标文件相同，则无需复制
-        return true;
+    // Try to copy the file
+    if (destFile.exists()) {
+        if (!destFile.remove()) {
+            m_lastError = "无法覆盖已存在的文件: " + dstPath;
+            return false;
+        }
     }
 
-    // 如果源文件和目标文件不同，使用QSaveFile来安全地覆盖文件
-    QSaveFile saveFile(dstPath);
-    if (!saveFile.open(QIODevice::WriteOnly)) {
-        m_lastError = "无法创建目标文件: " + dstPath;
-        return false;
+    return sourceFile.copy(dstPath);
+}
+
+QStringList FileStream::getImageFiles(const QString &directoryPath)
+{
+    m_lastError.clear();
+    QStringList imageFiles;
+    
+    // 处理URL路径，将file://前缀的URL转换为本地文件路径
+    QString localPath = directoryPath;
+    if (directoryPath.startsWith("file://")) {
+        localPath = QUrl(directoryPath).toLocalFile();
     }
-
-    // 打开源文件
-    if (!sourceFile.open(QIODevice::ReadOnly)) {
-        m_lastError = "无法打开源文件: " + srcPath;
-        saveFile.cancelWriting();
-        return false;
+    
+    // 检查目录是否存在
+    QDir dir(localPath);
+    if (!dir.exists()) {
+        m_lastError = "目录不存在: " + localPath;
+        return imageFiles;
     }
-
-    // 复制文件内容
-    QByteArray data = sourceFile.readAll();     //获得最初的二进制数据
-    qint64 bytesWritten = saveFile.write(data); //返回实际写入的字节数
-    sourceFile.close();
-
-    if (bytesWritten != data.size()) { //利用字节数匹配完成检测文件是否写入完整
-        m_lastError = "写入数据不完整";
-        saveFile.cancelWriting();
-        return false;
+    
+    // 设置文件过滤器，只显示常见图片格式文件
+    QStringList filters;
+    filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.bmp";
+    dir.setNameFilters(filters);
+    dir.setFilter(QDir::Files);
+    
+    // 获取符合条件的文件列表
+    QFileInfoList fileList = dir.entryInfoList();
+    QMimeDatabase mimeDb;
+    
+    // 通过MIME类型进一步验证文件是否为图片，并将有效图片添加到列表
+    for (const QFileInfo &fileInfo : fileList) {
+        QString filePath = fileInfo.absoluteFilePath();
+        
+        // 检查MIME类型是否为图像类型
+        QMimeType mimeType = mimeDb.mimeTypeForFile(filePath);
+        if (mimeType.name().startsWith("image/")) {
+            imageFiles.append(filePath);
+        }
     }
-
-    // 提交更改，这会安全地替换目标文件
-    if (!saveFile.commit()) {
-        m_lastError = "无法保存文件: " + dstPath;
-        return false;
-    }
-
-    return true;
+    
+    qDebug() << "在目录" << localPath << "中找到" << imageFiles.size() << "张图片";
+    return imageFiles;
 }

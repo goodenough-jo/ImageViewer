@@ -73,16 +73,41 @@ Item {
 
         }
 
-
-        // 左侧面板(目录树/工具)
         Page {
             id: _leftPage
             implicitWidth: 200
             z:999
+            footer:ToolBar{
+                RowLayout{
+                    anchors.fill:parent
+
+                    ToolButton{
+                        text:"文件夹"
+                        onClicked: {
+                            leftStack.currentIndex=0
+                        }
+
+                    }
+                    ToolButton{
+                        text:"工具栏"
+                        onClicked: {
+                            leftStack.currentIndex=1
+                        }
+                    }
+                }
+            }
+
             StackLayout {
+                id:leftStack
                 anchors.fill: parent
+                currentIndex: 1
 
 
+
+                Tree{
+                    Layout.alignment:Qt.AlignLeft
+                    id:_tree
+                }
 
                 // 工具栏
                 ScrollView {
@@ -181,10 +206,17 @@ Item {
                             action:actions.rename
                         }//重命名
 
+                        ToolButton{
+                            Layout.fillWidth: true
+                            action:actions.saveAs
+                        }//保存为
+
                         ToolButton {
                             Layout.fillWidth: true
                             action:actions.info
                         }//信息
+
+
                     }
                 }
             }

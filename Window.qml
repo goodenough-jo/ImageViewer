@@ -26,9 +26,7 @@ ApplicationWindow {
             ToolSeparator{Layout.fillHeight: true}
             ToolButton{action:actions.previous}
             ToolButton{action:actions.next}
-            ToolButton{action:actions.tool}
-            ToolButton{action:actions.saveAs}
-            // ToolButton{action:actions.tool}
+            // ToolButton{action:actions.saveAs}
 
             ToolButton{action:actions.fullscreen}//全屏
             ToolButton{action:actions.slidershow}//幻灯片播放
@@ -169,6 +167,10 @@ ApplicationWindow {
                 content.singlePlayer.toggleCropMode()
             }
         }//裁剪
+
+        // tool.onTriggered: {
+        //     content.
+        // }
 
     }
 
