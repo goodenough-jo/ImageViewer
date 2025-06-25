@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
+import QtQuick.Dialogs
+import QtCore
 
 
 Item {
@@ -59,8 +61,20 @@ Item {
         visible: false
     }
 
+    FileDialog{
+        id:cropSaveDialog
+        fileMode: FileDialog.SaveFile
+
+
+        onAccepted: {
+            var savePath = selectedFile.toString()
+            cropImage(savePath)
+        }
+    }
+
+
     //只是计算出了裁剪区域，并没有实际裁剪图片
-    function cropImage(){
+    function cropImage(savePath){
         console.log("source:"+source.toString())
 
         if (image.status !== Image.Ready) {
@@ -95,12 +109,6 @@ Item {
                              );
 
 
-        //打印scourceCrop坐标
-        console.log("sourceCrop.x:"+sourceCrop.x)
-        console.log("sourceCrop.y:"+sourceCrop.y)
-        console.log("sourceCrop.width:"+sourceCrop.width)
-        console.log("sourceCrop.height:"+sourceCrop.height)
-
 
         // 验证尺寸
         if (sourceCrop.width <= 0 || sourceCrop.height <= 0) {
@@ -112,12 +120,6 @@ Item {
         hiddenCanvas.width = Math.max(1,sourceCrop.width);
         hiddenCanvas.height = Math.max(1,sourceCrop.height);
 
-        //打印hiddenCanvas的坐标
-        console.log("hiddenCanvas.x:"+hiddenCanvas.x)
-        console.log("hiddenCanvas.y:"+hiddenCanvas.y)
-        console.log("hiddenCanvas.width:"+hiddenCanvas.width)
-        console.log("hiddenCanvas.height:"+hiddenCanvas.height)
-
 
         //获取上下文并绘制
         const ctx = hiddenCanvas.getContext("2d");
@@ -128,24 +130,25 @@ Item {
 
         //捕获图像
         hiddenCanvas.grabToImage(function(result){
+            // if(result){
+            //     console.log("开始保存")
+            //     result.saveToFile("file:///root/crop.png")
+            // }else{
+            //     console.error("无法创建裁剪图像")
+            //     container.croppingCancelled()
+            // }
 
-            if(result){
-                // //设置要保存的图像并打开对话框
-                // dialogs.saveDialog.imageToSave = result
-                // dialogs.saveDialog.open()
-                result.saveToFile("file:///root/crop.png")
-            }else{
-                console.error("无法创建裁剪图像")
-                container.croppingCancelled()
-            }
+            console.log("grabToImage执行")
+            result.saveToFile(savePath)
+            // cropSaveDialog.open()
         },Qt.size(sourceCrop.width, sourceCrop.height));
 
         // 退出裁剪模式（下次进入裁剪模式会重置裁剪范围）
         toggleCropMode();
 
-        // 推出裁剪模式（下次进入裁剪模式时仍然是上次的裁剪框大小和位置）
-        // cropMode = !cropMode;
     }
+
+
 
     //固定比例裁剪
     function setAspectRatio(ratio){
@@ -568,7 +571,22 @@ Item {
                 text: "裁剪"
                 Layout.preferredWidth: 80
                 highlighted: true
-                onClicked: cropImage()
+                // onClicked: cropImage()
+                onClicked:{
+                    var defaultName = "crop_"+Qt.formatDateTime(new Date(),"yyyyMMdd_hhmmss")
+
+                    if(source.toString()){
+                        defaultName +="_"+source.toString().split('/').pop()
+                    }
+                    console.log("defualtName:"+defaultName)
+
+                    cropSaveDialog.currentFile=StandardPaths.writableLocation(StandardPaths.PicturesLocation)
+                                                    +"/"+defaultName
+
+                    console.log("cropSaveDialog.currentFile:"+cropSaveDialog.currentFile)
+                    cropSaveDialog.open()
+
+                }
             }
         }
 
