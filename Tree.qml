@@ -67,6 +67,11 @@ TreeView {
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: 14
+                leftPadding: 8
+                rightPadding: 8
+                // 限制最大宽度，防止溢出
+                width: parent.width - 16
+                clip: true
             }
 
         }
