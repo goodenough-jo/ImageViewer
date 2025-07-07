@@ -30,6 +30,11 @@ Item {
 
     // 加载文件夹中的图片
     function loadFolderImages(folderPath) {
+        if(currentFolderPath===folderPath)
+        {
+            return;//只有目录真的改变才会执行，解决了如果多次点击文件夹图片会消失的问题
+        }
+
         console.log("Loading images from folder:", folderPath)
         currentFolderPath = folderPath
         
@@ -266,7 +271,7 @@ Item {
                             text: "Rename"
                             action:actions.rename
                         }//重命名
-
+                        
                         ToolButton{
                             Layout.fillWidth: true
                             action:actions.saveAs
