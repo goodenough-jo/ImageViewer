@@ -59,6 +59,10 @@ Item {
     Canvas{
         id: hiddenCanvas
         visible: false
+
+        onPaint:{
+            console.log("Canvas paint事件触发");
+        }
     }
 
     FileDialog{
@@ -75,7 +79,11 @@ Item {
 
     //只是计算出了裁剪区域，并没有实际裁剪图片
     function cropImage(savePath){
-        console.log("source:"+source.toString())
+        console.log("开始裁剪操作...");
+        console.log("源图片路径:", source.toString());
+        console.log("保存路径:", savePath);
+        console.log("图片状态:", image.status);
+        console.log("裁剪区域:", cropArea);
 
         if (image.status !== Image.Ready) {
             console.error("Image not ready for cropping");
@@ -89,6 +97,10 @@ Item {
         const imgWidth = image.paintedWidth;                                //图片实际显示区域的宽度
         const imgHeight = image.paintedHeight;                              //图片实际显示区域的高度
 
+        console.log("图片显示区域 - X:", imgX, "Y:", imgY, "宽度:", imgWidth, "高度:", imgHeight);
+
+
+
         //计算在图像实际显示区域中的裁剪区域(裁剪区域不超过图片区域)
         const cropInImage = Qt.rect(
                               Math.max(0,Math.min(imgWidth - 1,cropArea.x - imgX)),
@@ -97,18 +109,29 @@ Item {
                               Math.max(1,Math.min(imgHeight - (cropArea.y - imgY),cropArea.height))
                             );
 
+        console.log("图片坐标系中的裁剪区域:", cropInImage);
+
+
+
         //映射到原始图片坐标     比率=原始/实际    =》 原始 = 比率*实际
         const ratioX = image.sourceSize.width / imgWidth;
         const ratioY = image.sourceSize.height / imgHeight;
 
+        // const sourceCrop = Qt.rect(
+        //                      cropInImage.x * ratioX,
+        //                      cropInImage.y * ratioY,
+        //                      cropInImage.width * ratioX,
+        //                      cropInImage.height * ratioY
+        //                      );
         const sourceCrop = Qt.rect(
-                             cropInImage.x * ratioX,
-                             cropInImage.y * ratioY,
-                             cropInImage.width * ratioX,
-                             cropInImage.height * ratioY
-                             );
+            Math.floor(cropInImage.x * ratioX),
+            Math.floor(cropInImage.y * ratioY),
+            Math.floor(cropInImage.width * ratioX),
+            Math.floor(cropInImage.height * ratioY)
+        );//修改浮点数为整数
 
 
+        console.log("原始图片坐标系中的裁剪区域:", sourceCrop);
 
         // 验证尺寸
         if (sourceCrop.width <= 0 || sourceCrop.height <= 0) {
@@ -117,12 +140,26 @@ Item {
         }
 
 
-        hiddenCanvas.width = Math.max(1,sourceCrop.width);
-        hiddenCanvas.height = Math.max(1,sourceCrop.height);
+        // 设置Canvas尺寸（确保为整数）
+        hiddenCanvas.width = Math.max(1, Math.floor(sourceCrop.width));
+        hiddenCanvas.height = Math.max(1, Math.floor(sourceCrop.height));
+
+        // hiddenCanvas.width = Math.max(1,sourceCrop.width);
+        // hiddenCanvas.height = Math.max(1,sourceCrop.height);
+
+        console.log("Canvas尺寸 - 宽度:", hiddenCanvas.width, "高度:", hiddenCanvas.height);
 
 
         //获取上下文并绘制
         const ctx = hiddenCanvas.getContext("2d");
+
+        if (!ctx) {
+            console.error("无法获取Canvas上下文");
+            return;
+        }
+
+        console.log("开始绘制裁剪区域...");
+
         ctx.reset();
         ctx.drawImage(container.source,
                       sourceCrop.x, sourceCrop.y, sourceCrop.width, sourceCrop.height,
@@ -137,10 +174,14 @@ Item {
             //     console.error("无法创建裁剪图像")
             //     container.croppingCancelled()
             // }
+            if (!result) {
+                console.error("无法创建裁剪图像");
+                _messageDialog.show("裁剪失败，无法创建图像", true);
+                return;
+            }
 
-            console.log("grabToImage执行")
+            console.log("开始保存裁剪后的图像...");
             result.saveToFile(savePath)
-            // cropSaveDialog.open()
         },Qt.size(sourceCrop.width, sourceCrop.height));
 
         // 退出裁剪模式（下次进入裁剪模式会重置裁剪范围）
@@ -578,12 +619,12 @@ Item {
                     if(source.toString()){
                         defaultName +="_"+source.toString().split('/').pop()
                     }
-                    console.log("defualtName:"+defaultName)
+                    // console.log("defualtName:"+defaultName)
 
                     cropSaveDialog.currentFile=StandardPaths.writableLocation(StandardPaths.PicturesLocation)
                                                     +"/"+defaultName
 
-                    console.log("cropSaveDialog.currentFile:"+cropSaveDialog.currentFile)
+                    // console.log("cropSaveDialog.currentFile:"+cropSaveDialog.currentFile)
                     cropSaveDialog.open()
 
                 }
