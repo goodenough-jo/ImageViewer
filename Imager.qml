@@ -39,6 +39,9 @@ Item {
     signal croppingFinished(url imageUrl)
     signal croppingCancelled()
 
+
+    property rect deliver:Qt.rect(0,0,0,0)
+
     //切换裁剪模式
     function toggleCropMode(){
         cropMode = !cropMode;
@@ -62,6 +65,28 @@ Item {
 
         onPaint:{
             console.log("Canvas paint事件触发");
+
+            // console.log("onPaint-图片状态(前)",image.status);
+            //获取上下文并绘制
+            const ctx = hiddenCanvas.getContext("2d");
+
+            if (!ctx) {
+                console.error("无法获取Canvas上下文");
+                return;
+            }
+
+            console.log("开始绘制裁剪区域...");
+
+            ctx.reset();
+
+            console.log("drawImage启动")
+            ctx.drawImage(image,
+                          deliver.x, deliver.y, hiddenCanvas.width, hiddenCanvas.height,
+                          0, 0, hiddenCanvas.width, hiddenCanvas.height);
+            // console.log("onPaint-图片状态(后)",image.status);
+
+            console.log("drawImage结束")
+            console.log("Canvas paint事件结束")
         }
     }
 
@@ -80,15 +105,28 @@ Item {
     //只是计算出了裁剪区域，并没有实际裁剪图片
     function cropImage(savePath){
         console.log("开始裁剪操作...");
+
         console.log("源图片路径:", source.toString());
         console.log("保存路径:", savePath);
         console.log("图片状态:", image.status);
         console.log("裁剪区域:", cropArea);
 
+
+        // 检查图片加载状态
+        if (!image.isFullyLoaded) {
+            console.error("图片未完全加载，当前状态:", image.status);
+        }else{
+            console.log("cropImage-图片完全加载",image.status)
+        }
+
+        /*
         if (image.status !== Image.Ready) {
             console.error("Image not ready for cropping");
             return;
         }
+        */
+        // console.log("图片状态（2）:", image.status);
+
 
         //获取图片实际显示区域
         //paintedWidth 或paintedHeight表示实际绘制图像的大小。在大多数情况下，它与width 和height 相同，但在使用Image.PreserveAspectFit 或Image.PreserveAspectCrop 时，paintedWidth 或paintedHeight 可以小于或大于图像项的width 和height 。
@@ -133,12 +171,15 @@ Item {
 
         console.log("原始图片坐标系中的裁剪区域:", sourceCrop);
 
+        deliver=sourceCrop;
+
         // 验证尺寸
         if (sourceCrop.width <= 0 || sourceCrop.height <= 0) {
             console.error("Invalid crop dimensions:", sourceCrop.width, sourceCrop.height);
             return;
         }
 
+        hiddenCanvas.visible = true;
 
         // 设置Canvas尺寸（确保为整数）
         hiddenCanvas.width = Math.max(1, Math.floor(sourceCrop.width));
@@ -150,6 +191,14 @@ Item {
         console.log("Canvas尺寸 - 宽度:", hiddenCanvas.width, "高度:", hiddenCanvas.height);
 
 
+        // 添加Canvas绘制状态监听
+        hiddenCanvas.onPaint.connect(function() {
+            console.log("10. Canvas绘制完成回调触发");
+        });
+
+
+        hiddenCanvas.requestPaint();
+        /*
         //获取上下文并绘制
         const ctx = hiddenCanvas.getContext("2d");
 
@@ -161,12 +210,20 @@ Item {
         console.log("开始绘制裁剪区域...");
 
         ctx.reset();
+
+        console.log("drawImage启动")
         ctx.drawImage(container.source,
-                      sourceCrop.x, sourceCrop.y, sourceCrop.width, sourceCrop.height,
+                      sourceCrop.x, sourceCrop.y, hiddenCanvas.width, hiddenCanvas.height,
                       0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        console.log("drawImage结束")
+
+        */
 
         //捕获图像
         hiddenCanvas.grabToImage(function(result){
+            console.log("grabToImage启动")
+            console.log("grabToImage-图片状态(前)",image.status);
+
             // if(result){
             //     console.log("开始保存")
             //     result.saveToFile("file:///root/crop.png")
@@ -174,17 +231,24 @@ Item {
             //     console.error("无法创建裁剪图像")
             //     container.croppingCancelled()
             // }
+
             if (!result) {
                 console.error("无法创建裁剪图像");
-                _messageDialog.show("裁剪失败，无法创建图像", true);
                 return;
             }
 
             console.log("开始保存裁剪后的图像...");
             result.saveToFile(savePath)
-        },Qt.size(sourceCrop.width, sourceCrop.height));
+            console.log("grabToImage-图片状态(后)",image.status);
+
+        },Qt.size(hiddenCanvas.width,  hiddenCanvas.height));
 
         // 退出裁剪模式（下次进入裁剪模式会重置裁剪范围）
+
+        hiddenCanvas.visible = false;
+
+
+
         toggleCropMode();
 
     }
@@ -271,10 +335,42 @@ Item {
             anchors.fill: parent     //将两个handler放入的时候需要注释此行
             source: container.source
             fillMode: Image.PreserveAspectFit   //图片自适应屏幕
-            // fillMode: Image.PreserveAspectCrop   //图片自适应裁剪
             smooth: true    //缩放或拖拽时平滑过渡
-            // antialiasing: true  //抗锯齿
 
+            // 添加加载状态属性
+            property bool isFullyLoaded: false
+
+            onStatusChanged: {
+                // console.log("Image.Ready:",Image.Ready)
+                // console.log("Image.Loading:",Image.Loading)
+                // console.log("Image.Error:",Image.Error)
+
+
+                console.log("图片状态变化:", status);
+
+                if (status === Image.Ready) {
+                    console.log("image-图片已完全加载",image.status);
+                    // console.log("Image.Ready:",Image.Ready)
+                    isFullyLoaded = true;
+                } else if (status === Image.Error) {
+                    console.error("image-图片加载失败:",image.status);
+                    // console.log("Image.Error:",Image.Error)
+
+                    isFullyLoaded = false;
+                } else if (status === Image.Loading){
+                    console.log("image-图片正在加载",image.status)
+                    // console.log("image-图片正在加载",Image.status);
+
+                    isFullyLoaded = false;
+                }
+            }
+
+            // 添加加载进度指示器
+            BusyIndicator {
+                anchors.centerIn: parent
+                running: image.status === Image.Loading
+                visible: running
+            }
 
         }
 
