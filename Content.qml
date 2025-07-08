@@ -52,6 +52,7 @@ Item {
     // 从文件夹模型加载图片到列表模型
     function loadImagesFromModel() {
         console.log("Model status changed, count:", folderModel.count)
+        musicFiles.clear()//清空模型，避免重复加载
         
         // 将图片添加到模型
         for (let i = 0; i < folderModel.count; i++) {
@@ -384,7 +385,7 @@ Item {
                         onTriggered: {
                             if (singlePlayer.visible && singlePlayer.source !== "") {
                                 var filePath = singlePlayer.source
-                                dialogs.saveDialog.save(filePath)
+                                dialogs.saveAsDialog.save(filePath)
                             }
                         }
                     }
