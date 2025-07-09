@@ -87,7 +87,7 @@ Item {
     }
 
     InfoPopup{
-        id:_infoPopup
+        id:_infoPopup//弹窗我单独分为了一个类
     }
 
     FileDialog{

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Popup {
     id: imageInfo
-    modal: true
+    modal: true//感受一下模态弹窗的威力吧
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside//这是popup中能够简单支持弹窗外不用关闭按钮即可关闭的特性
     width: 380
@@ -32,7 +32,7 @@ Popup {
     contentItem: Rectangle {
         id: contentRect
         color: "#FFFFFF"
-        radius: 8
+        radius: 8//我加了一点点圆角，人生啊总不能有那么多棱角的
         border.width: 0
         anchors.fill: parent
         
@@ -110,7 +110,7 @@ Popup {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
-                    anchors.leftMargin: 12
+                    anchors.leftMargin: 12//我承认你的layout很强，但是anchors的左对齐和左边距是非常伟大的发明
                     text: "详细信息"
                     font.pixelSize: 14
                     font.bold: true
@@ -155,7 +155,7 @@ Popup {
                     
                     delegate: Rectangle {
                         width: detailsList.width
-                        height: Math.max(40, valueText.implicitHeight + 16)
+                        height: Math.max(40, valueText.implicitHeight + 16)//我已经掌握了动态高度的力量
                         color: index % 2 === 0 ? "#FFFFFF" : "#F5F5F5"
                         radius: 4
                         border.width: 0
@@ -193,7 +193,7 @@ Popup {
                     ScrollBar.vertical: ScrollBar {
                         active: true
                         policy: ScrollBar.AsNeeded
-                    }
+                    }//我觉得始终是需要滑块这个东西的吧
                 }
             }
         }

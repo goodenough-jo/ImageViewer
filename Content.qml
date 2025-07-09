@@ -206,7 +206,9 @@ Item {
                             action:actions.rotateCCW
                         }
 
-                        //水平翻转
+                        //水平翻转重命名需要通过建立旧路径（旧文件名）的qfile对象以及通过qfileinfo获取文件信息执行，最后将其更新为新路径（新文件名）【因为文件的路径内包含着文件名，本质还是改变路径】
+                        //需要通过与qml内的交互执行，所以在组件内部建立了方法
+
                         ToolButton{
                             Layout.fillWidth: true
                             action:actions.horizontalFlip

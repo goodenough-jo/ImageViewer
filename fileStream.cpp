@@ -25,11 +25,13 @@ bool FileStream::moveToTrash(const QString &filePath)
     }
 
     const QString trashDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Trash";
-    const QString fileDir = trashDir + "/files";
-    const QString infoDir = trashDir + "/info";
+    const QString fileDir = trashDir + "/files"; //实际存放文件的目录
+    const QString infoDir = trashDir + "/info";  //存放元信息的目录
     //get the path of trash recycler
+    //trash/files负责存放被删除的文件，trash/info负责存放.trashinfo对应的元数据
 
     if (!QDir().mkpath(fileDir) || !QDir().mkpath(infoDir)) {
+        //mkdir -p
         m_lastError = "cannot create trash directory";
         return false;
     } //create trash directory;
@@ -39,7 +41,7 @@ bool FileStream::moveToTrash(const QString &filePath)
     int counter = 1;
     while (QFile::exists(fileDir + "/" + newName)) {
         newName = originalFile.baseName() + "_" + QString::number(counter++) + "." + originalFile.completeSuffix();
-    } //solve the problem of file name when get conflicted;
+    } //solve the problem of file name when get conflicted in recycler;
 
     QString destFilePath = fileDir + "/" + newName;
     if (!QFile::rename(filePath, destFilePath)) {
@@ -48,19 +50,19 @@ bool FileStream::moveToTrash(const QString &filePath)
     } //move the file to the trash
 
     QString infoFilePath = infoDir + "/" + newName + ".trashinfo";
-    QSaveFile infoFile(infoFilePath);
+    QSaveFile infoFile(infoFilePath); //原子性写入，没完成之前不会真正覆盖
     if (!infoFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QFile::rename(destFilePath, filePath);
         m_lastError = "cannot create original data file";
         return false;
-    } //create original data file
+    } //create original data file,like original path and delete time
 
-    QTextStream out(&infoFile);
+    QTextStream out(&infoFile); //写入元数据了
     out << "[Trash Info]\n"
         << "Path=" << QUrl::toPercentEncoding(originalFile.absoluteFilePath()) << "\n"
         << "DeletionDate=" << QDateTime::currentDateTime().toString(Qt::ISODate) << "\n";
 
-    if (!infoFile.commit()) {
+    if (!infoFile.commit()) { //提交元数据
         QFile::rename(destFilePath, filePath);
         m_lastError = "cannot write original data";
         return false;
@@ -104,15 +106,15 @@ bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
 {
     m_lastError.clear();
 
-    // 处理源路径，检查是否已经包含file://前缀
+    //处理源路径，检查是否已经包含file://前缀
     QString srcPath;
     if (sourcePath.startsWith("file://")) {
         srcPath = QUrl(sourcePath).toLocalFile();
     } else {
-        srcPath = sourcePath;  // 直接使用没有前缀的路径
+        srcPath = sourcePath; //直接使用没有前缀的路径
     }
-    
-    // 处理目标路径
+
+    //处理目标路径
     QString dstPath;
     if (newPath.startsWith("file://")) {
         dstPath = QUrl(newPath).toLocalFile();
@@ -143,35 +145,38 @@ QStringList FileStream::getImageFiles(const QString &directoryPath)
 {
     m_lastError.clear();
     QStringList imageFiles;
-    
-    // 处理URL路径，将file://前缀的URL转换为本地文件路径
+
+    //处理URL路径，将file://前缀的URL转换为本地文件路径
     QString localPath = directoryPath;
     if (directoryPath.startsWith("file://")) {
         localPath = QUrl(directoryPath).toLocalFile();
     }
-    
-    // 检查目录是否存在
+
+    //检查目录是否存在
     QDir dir(localPath);
     if (!dir.exists()) {
         m_lastError = "目录不存在: " + localPath;
         return imageFiles;
     }
-    
-    // 设置文件过滤器，只显示常见图片格式文件
+
+    //设置文件过滤器，只显示常见图片格式文件
     QStringList filters;
     filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.bmp";
     dir.setNameFilters(filters);
     dir.setFilter(QDir::Files);
-    
-    // 获取符合条件的文件列表
+
+    //获取符合条件的文件列表
     QFileInfoList fileList = dir.entryInfoList();
     QMimeDatabase mimeDb;
-    
-    // 通过MIME类型进一步验证文件是否为图片，并将有效图片添加到列表
+
+    //通过MIME类型进一步验证文件是否为图片，并将有效图片添加到列表
+    //MIME类型是通过分析文件内容，而非仅通过扩展名来分析文件格式的特性
+    //本质上是分析文件头，但是我们并不分析其16进制数据（太难了）
+    //通过对应的文件头名就可以，如image/jpeg
     for (const QFileInfo &fileInfo : fileList) {
         QString filePath = fileInfo.absoluteFilePath();
-        
-        // 检查MIME类型是否为图像类型
+
+        //检查MIME类型是否为图像类型
         QMimeType mimeType = mimeDb.mimeTypeForFile(filePath);
         if (mimeType.name().startsWith("image/")) {
             imageFiles.append(filePath);
