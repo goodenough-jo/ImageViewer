@@ -20,7 +20,7 @@ Item {
     property alias crop: _crop
     property alias fullscreen:_fullscreen//全屏
     property alias slidershow:_slideshow
-    property alias folderView: _folderView // 添加文件夹视图属性
+    // property alias folderView: _folderView // 添加文件夹视图属性
 
     Action{
         id:_open
@@ -126,9 +126,9 @@ Item {
         icon.name: "edit-cut"
     }//裁剪
     
-    Action{
-        id: _folderView
-        text: "Folder View"
-        icon.name: "folder-pictures"
-    }//文件夹图片视图
+    // Action{
+    //     id: _folderView
+    //     text: "Folder View"
+    //     icon.name: "folder-pictures"
+    // }//文件夹图片视图
 }

@@ -31,8 +31,8 @@ ApplicationWindow {
             ToolButton{action:actions.fullscreen}//全屏
             ToolButton{action:actions.slidershow}//幻灯片播放
 
-            ToolSeparator{Layout.fillHeight: true}
-            ToolButton{action:actions.folderView}//文件夹图片视图
+            // ToolSeparator{Layout.fillHeight: true}
+            // ToolButton{action:actions.folderView}//文件夹图片视图
         }
     }
 
@@ -171,22 +171,22 @@ ApplicationWindow {
         }//裁剪
 
         // 文件夹图片视图切换
-        folderView.onTriggered: {
-            showFolderImagesGrid = !showFolderImagesGrid
+        // folderView.onTriggered: {
+        //     showFolderImagesGrid = !showFolderImagesGrid
             
-            // 切换左侧栏的当前索引
-            if (showFolderImagesGrid) {
-                // 显示目录树视图，隐藏单图查看
-                content.leftPage.children[0].currentIndex = 0
-                content.singlePlayer.visible = false
-            } else {
-                // 如果有选中的图片，切换到单图模式
-                if (content.currentIndex >= 0 && content.musicFiles.count > 0) {
-                    content.singlePlayer.source = content.musicFiles.get(content.currentIndex).filePath
-                    content.singlePlayer.visible = true
-                }
-            }
-        }
+        //     // 切换左侧栏的当前索引
+        //     if (showFolderImagesGrid) {
+        //         // 显示目录树视图，隐藏单图查看
+        //         content.leftPage.children[0].currentIndex = 0
+        //         content.singlePlayer.visible = false
+        //     } else {
+        //         // 如果有选中的图片，切换到单图模式
+        //         if (content.currentIndex >= 0 && content.musicFiles.count > 0) {
+        //             content.singlePlayer.source = content.musicFiles.get(content.currentIndex).filePath
+        //             content.singlePlayer.visible = true
+        //         }
+        //     }
+        // }
 
         // tool.onTriggered: {
         //     content.
