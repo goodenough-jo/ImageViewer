@@ -30,7 +30,7 @@ ApplicationWindow {
 
             ToolButton{action:actions.fullscreen}//全屏
             ToolButton{action:actions.slidershow}//幻灯片播放
-            
+
             ToolSeparator{Layout.fillHeight: true}
             ToolButton{action:actions.folderView}//文件夹图片视图
         }

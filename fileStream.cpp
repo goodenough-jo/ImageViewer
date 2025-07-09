@@ -132,7 +132,7 @@ bool FileStream::saveAs(const QString &sourcePath, const QString &newPath)
     if (destFile.exists()) {
         if (!destFile.remove()) {
             m_lastError = "无法覆盖已存在的文件: " + dstPath;
-            return false;
+        return false;
         }
     }
 
