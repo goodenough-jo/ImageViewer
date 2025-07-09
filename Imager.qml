@@ -62,6 +62,9 @@ Item {
     Canvas{
         id: hiddenCanvas
         visible: false
+        // renderTarget: Canvas.Image
+
+
 
         onPaint:{
             console.log("Canvas paint事件触发");
@@ -83,7 +86,7 @@ Item {
             ctx.drawImage(image,
                           deliver.x, deliver.y, hiddenCanvas.width, hiddenCanvas.height,
                           0, 0, hiddenCanvas.width, hiddenCanvas.height);
-            // console.log("onPaint-图片状态(后)",image.status);
+
 
             console.log("drawImage结束")
             console.log("Canvas paint事件结束")
@@ -190,47 +193,76 @@ Item {
 
         console.log("Canvas尺寸 - 宽度:", hiddenCanvas.width, "高度:", hiddenCanvas.height);
 
+        // // 定义回调函数
+        // function onPaintHandler() {
+        //     console.log("Canvas绘制完成--disconnet，开始捕获...");
+        //     hiddenCanvas.grabToImage(function(result) {
+        //         if (!result) {
+        //             console.error("捕获失败");
+        //             return;
+        //         }
+        //         result.saveToFile(savePath);
+        //     });
+        // }
 
-        // 添加Canvas绘制状态监听
-        hiddenCanvas.onPaint.connect(function() {
-            console.log("10. Canvas绘制完成回调触发");
-        });
 
+        // 清理旧回调并绑定新回调
+        // hiddenCanvas.onPaint.disconnect(onPaintHandler);
+
+        // // 添加Canvas绘制状态监听
+        // hiddenCanvas.onPaint.connect(function() {
+        //     console.log("10. Canvas绘制完成回调触发");
+        // });
+
+        // hiddenCanvas.onPaint.connect(function() {
+
+        //         console.log("Canvas绘制完成，开始捕获...");
+        //         hiddenCanvas.grabToImage(function(result) {
+        //             if (!result) {
+        //                 console.error("捕获失败");
+        //                 return;
+        //             }
+        //             result.saveToFile(savePath);
+        //         });
+        // });
+
+        // hiddenCanvas.onPaint.connect(onPaintHandler);
+
+        // hiddenCanvas.onPaint.disconnect(hiddenCanvas.paintHandler);
+        // hiddenCanvas.onPaint.connect(hiddenCanvas.paintHandler);
 
         hiddenCanvas.requestPaint();
-        /*
-        //获取上下文并绘制
-        const ctx = hiddenCanvas.getContext("2d");
+        hiddenCanvas.onPaint.connect(function(){
+            console.log("第二次darwImage触发");
 
-        if (!ctx) {
-            console.error("无法获取Canvas上下文");
-            return;
-        }
+            // console.log("onPaint-图片状态(前)",image.status);
+            //获取上下文并绘制
+            const ctx = hiddenCanvas.getContext("2d");
 
-        console.log("开始绘制裁剪区域...");
+            if (!ctx) {
+                console.error("无法获取Canvas上下文");
+                return;
+            }
 
-        ctx.reset();
+            console.log("开始绘制裁剪区域...");
 
-        console.log("drawImage启动")
-        ctx.drawImage(container.source,
-                      sourceCrop.x, sourceCrop.y, hiddenCanvas.width, hiddenCanvas.height,
-                      0, 0, hiddenCanvas.width, hiddenCanvas.height);
-        console.log("drawImage结束")
+            ctx.reset();
 
-        */
+            console.log("drawImage启动")
+            ctx.drawImage(image,
+                          deliver.x, deliver.y, hiddenCanvas.width, hiddenCanvas.height,
+                          0, 0, hiddenCanvas.width, hiddenCanvas.height);
+
+
+            console.log("drawImage结束")
+            console.log("Canvas paint事件结束")
+        });
+
 
         //捕获图像
         hiddenCanvas.grabToImage(function(result){
             console.log("grabToImage启动")
-            console.log("grabToImage-图片状态(前)",image.status);
 
-            // if(result){
-            //     console.log("开始保存")
-            //     result.saveToFile("file:///root/crop.png")
-            // }else{
-            //     console.error("无法创建裁剪图像")
-            //     container.croppingCancelled()
-            // }
 
             if (!result) {
                 console.error("无法创建裁剪图像");
@@ -243,10 +275,12 @@ Item {
 
         },Qt.size(hiddenCanvas.width,  hiddenCanvas.height));
 
-        // 退出裁剪模式（下次进入裁剪模式会重置裁剪范围）
+
+
+
+
 
         hiddenCanvas.visible = false;
-
 
 
         toggleCropMode();
