@@ -15,15 +15,15 @@ int main(int argc, char *argv[])
     FileStream *fileStream = new FileStream(&app);
     FileInfo *fileInfo = new FileInfo(&app);
     FileLead *fileLead = new FileLead(&app);
-    // ImageCropper *imageCropper = new ImageCropper(&app);
+    ImageCropper *imageCropper = new ImageCropper(&app);
 
     qmlRegisterType<FileLead>("FileTree", 1, 0, "FileLead");
 
     engine.rootContext()->setContextProperty("fileStream", fileStream);
     engine.rootContext()->setContextProperty("fileInfo", fileInfo);
     engine.rootContext()->setContextProperty("fileLead", fileLead);
-    // engine.rootContext()->setContextProperty("imageCropper", imageCropper);
-    qmlRegisterType<ImageCropper>("ImageTools", 1, 0, "ImageCropper");
+    engine.rootContext()->setContextProperty("imageCropper", imageCropper);
+    // qmlRegisterType<ImageCropper>("ImageTools", 1, 0, "ImageCropper");
 
     QObject::connect(
         &engine,

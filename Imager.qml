@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQuick.Dialogs
-import ImageTools
 import QtCore
 
 
@@ -60,9 +59,9 @@ Item {
         }
     }
 
-    ImageCropper {
-        id: imageCropper
-    }
+    // ImageCropper {
+    //     id: imageCropper
+    // }
 
     /*
     Canvas{
