@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQuick.Dialogs
+import ImageTools
 import QtCore
 
 
@@ -59,9 +60,15 @@ Item {
         }
     }
 
+    ImageCropper {
+        id: imageCropper
+    }
+
+    /*
     Canvas{
         id: hiddenCanvas
         visible: false
+        z:-100
         // renderTarget: Canvas.Image
 
 
@@ -83,15 +90,18 @@ Item {
             ctx.reset();
 
             console.log("drawImage启动")
-            ctx.drawImage(image,
-                          deliver.x, deliver.y, hiddenCanvas.width, hiddenCanvas.height,
-                          0, 0, hiddenCanvas.width, hiddenCanvas.height);
+            ctx.drawImage(
+                image,
+                deliver.x, deliver.y, deliver.width, deliver.height, // 源区域
+                0, 0, hiddenCanvas.width, hiddenCanvas.height        // 目标区域
+            );
 
 
             console.log("drawImage结束")
             console.log("Canvas paint事件结束")
         }
     }
+    */
 
     FileDialog{
         id:cropSaveDialog
@@ -174,6 +184,21 @@ Item {
 
         console.log("原始图片坐标系中的裁剪区域:", sourceCrop);
 
+
+        // 调用 C++ 后端裁剪
+        const success = imageCropper.cropImage(
+            container.source,
+            Qt.url(savePath),
+            sourceCrop
+        );
+
+        if (success) {
+            console.log("裁剪保存成功:", savePath);
+            toggleCropMode();
+        } else {
+            console.error("裁剪失败");
+        }
+        /*
         deliver=sourceCrop;
 
         // 验证尺寸
@@ -182,7 +207,6 @@ Item {
             return;
         }
 
-        hiddenCanvas.visible = true;
 
         // 设置Canvas尺寸（确保为整数）
         hiddenCanvas.width = Math.max(1, Math.floor(sourceCrop.width));
@@ -193,71 +217,19 @@ Item {
 
         console.log("Canvas尺寸 - 宽度:", hiddenCanvas.width, "高度:", hiddenCanvas.height);
 
-        // // 定义回调函数
-        // function onPaintHandler() {
-        //     console.log("Canvas绘制完成--disconnet，开始捕获...");
-        //     hiddenCanvas.grabToImage(function(result) {
-        //         if (!result) {
-        //             console.error("捕获失败");
-        //             return;
-        //         }
-        //         result.saveToFile(savePath);
-        //     });
-        // }
 
-
-        // 清理旧回调并绑定新回调
-        // hiddenCanvas.onPaint.disconnect(onPaintHandler);
-
-        // // 添加Canvas绘制状态监听
-        // hiddenCanvas.onPaint.connect(function() {
-        //     console.log("10. Canvas绘制完成回调触发");
-        // });
-
-        // hiddenCanvas.onPaint.connect(function() {
-
-        //         console.log("Canvas绘制完成，开始捕获...");
-        //         hiddenCanvas.grabToImage(function(result) {
-        //             if (!result) {
-        //                 console.error("捕获失败");
-        //                 return;
-        //             }
-        //             result.saveToFile(savePath);
-        //         });
-        // });
-
-        // hiddenCanvas.onPaint.connect(onPaintHandler);
-
-        // hiddenCanvas.onPaint.disconnect(hiddenCanvas.paintHandler);
-        // hiddenCanvas.onPaint.connect(hiddenCanvas.paintHandler);
 
         hiddenCanvas.requestPaint();
-        hiddenCanvas.onPaint.connect(function(){
-            console.log("第二次darwImage触发");
-
-            // console.log("onPaint-图片状态(前)",image.status);
-            //获取上下文并绘制
-            const ctx = hiddenCanvas.getContext("2d");
-
-            if (!ctx) {
-                console.error("无法获取Canvas上下文");
-                return;
-            }
-
-            console.log("开始绘制裁剪区域...");
-
-            ctx.reset();
-
-            console.log("drawImage启动")
-            ctx.drawImage(image,
-                          deliver.x, deliver.y, hiddenCanvas.width, hiddenCanvas.height,
-                          0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        hiddenCanvas.visible = true;
 
 
-            console.log("drawImage结束")
-            console.log("Canvas paint事件结束")
+        hiddenCanvas.forceActiveFocus();
+        Qt.callLater(function() {
+            hiddenCanvas.grabToImage(function(result) {
+                // 保存逻辑
+                hiddenCanvas.visible = false;
+            });
         });
-
 
         //捕获图像
         hiddenCanvas.grabToImage(function(result){
@@ -284,7 +256,7 @@ Item {
 
 
         toggleCropMode();
-
+        */
     }
 
 
@@ -366,6 +338,7 @@ Item {
         //todo 围绕鼠标位置进行缩放
         Image{
             id: image
+
             anchors.fill: parent     //将两个handler放入的时候需要注释此行
             source: container.source
             fillMode: Image.PreserveAspectFit   //图片自适应屏幕

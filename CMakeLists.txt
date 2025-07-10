@@ -31,6 +31,7 @@ qt_add_qml_module(appplayer
     SOURCES filelead.h filelead.cpp
     QML_FILES AnnotationWindow.qml
     QML_FILES Tree.qml
+    SOURCES imagecropper.h imagecropper.cpp
 )
 
 target_compile_features(appplayer PRIVATE cxx_std_23)
