@@ -159,11 +159,8 @@ QStringList FileStream::getImageFiles(const QString &directoryPath)
         return imageFiles;
     }
 
-    //设置文件过滤器，只显示常见图片格式文件
-    QStringList filters;
-    filters << "*.jpg" << "*.jpeg" << "*.png" << "*.gif" << "*.bmp";
-    dir.setNameFilters(filters);
-    dir.setFilter(QDir::Files);
+    //获取目录中的所有文件，后续再通过MIME类型过滤
+    dir.setFilter(QDir::Files | QDir::NoDotAndDotDot);
 
     //获取符合条件的文件列表
     QFileInfoList fileList = dir.entryInfoList();
